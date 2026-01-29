@@ -41,10 +41,10 @@
             top: 0;
             left: 0;
             width: 794px; /* A4 寬度 */
-            background: white;
+            background: #525659; /* 模擬預覽背景 */
             z-index: 9999;
             margin: 0; 
-            padding: 0;
+            padding: 20px 0;
         }
 
         /* 單頁容器：嚴格鎖定高度，防止溢出產生空白頁 */
@@ -56,6 +56,7 @@
             background: white;
             position: relative;
             overflow: hidden; /* 超出內容直接切除 */
+            margin: 0 auto 20px auto; /* 頁間距 */
         }
 
         /* === UI 元件 === */
@@ -105,7 +106,7 @@
 <div id="loadingOverlay">
     <div style="font-size:3em; margin-bottom:15px;">📄</div>
     <div style="font-size:1.2em; font-weight:bold;">正在製作報告...</div>
-    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(手機版請稍候 3-5 秒，勿關閉視窗)</div>
+    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(畫面將切換為預覽模式，請勿關閉)</div>
 </div>
 
 <div id="mobileAppLayer">
@@ -133,7 +134,7 @@
 
         <div style="text-align:center; margin-top:40px; margin-bottom:20px;">
             <p style="color:#0056b3; font-weight:bold; margin-bottom:10px;">想保存這份分析報告嗎？</p>
-            <button class="btn" style="background:#28a745; margin-top:0;" onclick="startPdfProcess()">📥 下載完整 PDF 報告</button>
+            <button class="btn" style="background:#28a745; margin-top:0;" onclick="startPdfProcess()">📥 產生 PDF 報告</button>
             <button class="btn" style="background:#6c757d;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
     </div>
@@ -150,7 +151,7 @@
             <div style="font-size:6em; font-weight:bold; color:#d9534f; line-height:1;" id="pdfTotal">0</div>
         </div>
 
-        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:50px; font-size: 20px;">第一部分：各面向詳細得分</h3>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:50px; font-size: 20px;">第一部分：詳細得分</h3>
         <table class="pdf-table">
             <thead>
                 <tr><th width="40%">檢測面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr>
@@ -272,10 +273,8 @@
             let color = s>=20?"green":(s>=11?"#d39e00":"#d9534f");
             
             adviceHtml += `<div class="web-advice-item"><b>${questions[key].label}</b>: ${getAdvice(s, key)}</div>`;
-            
             pdfTable += `<tr><td>${questions[key].label}</td><td style="font-weight:bold; font-size:1.1em;">${s}</td><td style="color:${color};font-weight:bold">${status}</td></tr>`;
-            
-            pdfAdvice += `<div style="margin-bottom:12px; padding:10px; background:#f9f9f9; border-left:4px solid ${color}; font-size:0.95em; text-align:justify; line-height:1.5;"><b>${questions[key].label}:</b> ${getAdvice(s, key)}</div>`;
+            pdfAdvice += `<div style="margin-bottom:12px; padding:10px; background:#f9f9f9; border-left:4px solid ${color}; font-size:16px; text-align:justify; line-height:1.5;"><b>${questions[key].label}:</b> ${getAdvice(s, key)}</div>`;
         }
 
         document.getElementById('webAdviceList').innerHTML = adviceHtml;
@@ -290,20 +289,16 @@
         webChart = drawChart('webRadarChart', data, false);
     }
 
-    // === 核心：極速下載流程 (V28.0) ===
+    // === 核心：所見即所得下載流程 ===
     async function startPdfProcess() {
         document.getElementById('loadingOverlay').style.display = 'block';
-        
-        // 1. 暫存並歸零 Body 樣式
-        const originalPadding = document.body.style.padding;
-        document.body.style.padding = '0';
-        document.body.style.margin = '0';
         window.scrollTo(0, 0);
 
-        // 2. 瞬間覆蓋 PDF 層 (不隱藏手機層，避免 Layout Thrashing，直接蓋上去)
+        // 1. 切換畫面：隱藏手機層，顯示 PDF 層
+        document.getElementById('mobileAppLayer').style.display = 'none';
         document.getElementById('pdfPrintLayer').style.display = 'block';
 
-        // 3. 繪製圖表
+        // 2. 準備繪製圖表
         let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
         document.querySelectorAll('input[type="range"]').forEach(input => {
             scores[input.dataset.cat] += parseInt(input.value);
@@ -311,37 +306,42 @@
         const data = [scores.finance, scores.health, scores.social, scores.purpose];
         
         if(pdfChart) pdfChart.destroy();
+        
+        // 3. 延遲 100ms 確保 DOM 已渲染
+        await new Promise(r => setTimeout(r, 100));
         pdfChart = drawChart('pdfRadarChart', data, true);
 
-        // 4. 等待渲染 (縮短至 800ms)
+        // 4. 等待 800ms 讓圖表畫好
         await new Promise(r => setTimeout(r, 800));
 
-        // 5. 執行下載 (智慧降規)
-        const element = document.getElementById('pdfPrintLayer');
+        // 5. 檢測是否為手機
         const isMobile = window.innerWidth < 800;
-        
+
+        // 6. 截圖下載
+        const element = document.getElementById('pdfPrintLayer');
         const opt = {
             margin: 0,
             filename: '退休準備度診斷報告.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
-                scale: isMobile ? 1 : 2, // 手機版降為 1 倍，防止記憶體崩潰
+                scale: isMobile ? 1 : 2, // 手機降規防崩潰
                 useCORS: true, 
                 scrollY: 0, 
-                windowWidth: 794, 
+                windowWidth: 794,
                 x: 0, y: 0
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            enableLinks: false
         };
 
         try {
             await html2pdf().set(opt).from(element).save();
         } catch (err) {
-            alert('下載失敗，請使用 Chrome 瀏覽器');
+            alert('PDF 製作發生錯誤：' + err);
         } finally {
-            // 6. 還原
-            document.body.style.padding = originalPadding;
+            // 7. 還原介面
             document.getElementById('pdfPrintLayer').style.display = 'none';
+            document.getElementById('mobileAppLayer').style.display = 'block';
             document.getElementById('loadingOverlay').style.display = 'none';
             window.scrollTo(0, 0);
         }
