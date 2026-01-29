@@ -19,10 +19,10 @@
             color: #333;
             margin: 0;
             padding: 15px;
-            overflow-x: hidden; /* 防止橫向卷軸 */
+            overflow-x: hidden;
         }
 
-        /* === 1. 用戶操作層 (正常顯示) === */
+        /* === 1. 用戶操作層 === */
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -31,19 +31,32 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             position: relative;
-            z-index: 50; /* 確保在最上層 */
+            z-index: 10; /* 平常在 PDF 層上面 */
             min-height: 80vh;
         }
         
-        /* === 2. PDF 生成層 (螢幕外渲染 - 關鍵修正) === */
-        /* 我們將它移到螢幕左側 10000px 處，而不是藏在底下或設為隱藏 */
+        /* === 2. PDF 生成層 (關鍵修正) === */
         #pdfHiddenLayer {
-            position: fixed; 
-            left: -10000px;  /* 移出螢幕範圍，但 DOM 依然渲染它 */
+            position: absolute; /* 不用 fixed，避免滾動問題 */
             top: 0;
+            left: 0;
             width: 794px;    /* A4 寬度 */
             background: white;
-            z-index: -100;
+            z-index: -100;   /* 平常藏在最底層 */
+            opacity: 0;      /* 平常完全透明 */
+            pointer-events: none; /* 穿透點擊 */
+        }
+
+        /* === 3. 載入遮罩 (最高層級) === */
+        #loading {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); /* 純黑背景，遮住底下的 PDF 運算過程 */
+            color: white; 
+            z-index: 20000; /* 最高層級 */
+            text-align: center; 
+            padding-top: 40vh;
         }
 
         /* === UI 樣式 === */
@@ -110,7 +123,7 @@
             position: relative;
         }
         
-        /* PDF 雷達圖容器 (固定尺寸，防止變形) */
+        /* PDF 雷達圖容器 (固定尺寸) */
         .chart-container-pdf {
             position: relative;
             width: 450px;
@@ -122,23 +135,15 @@
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px; text-align: center; }
         .pdf-table th { background-color: var(--primary-color); color: white; }
 
-        /* 強制換頁 */
         .page-break { page-break-before: always; }
-
-        /* 載入遮罩 */
-        #loading {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); color: white; z-index: 99999;
-            text-align: center; padding-top: 40vh;
-        }
     </style>
 </head>
 <body>
 
 <div id="loading">
-    <div style="font-size:2em; margin-bottom:10px;">📊</div>
-    正在生成 PDF 報告...<br>
-    <span style="font-size:0.8em; color:#ccc;">(手機需時 3-5 秒)</span>
+    <div style="font-size:3em; margin-bottom:20px;">📄</div>
+    <div style="font-size:1.5em; font-weight:bold;">正在製作報告書</div>
+    <div style="margin-top:10px; color:#ccc;">確保畫面完整，請勿關閉視窗...</div>
 </div>
 
 <div class="container">
@@ -291,12 +296,11 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                // PDF 版不開動畫，確保瞬間畫完
+                // PDF 版關閉動畫
                 animation: isPdf ? false : { duration: 1000 },
                 scales: {
                     r: {
                         suggestedMin: 0, suggestedMax: 25,
-                        // PDF 版隱藏刻度
                         ticks: { stepSize: 5, display: !isPdf } 
                     }
                 },
@@ -313,7 +317,6 @@
 
         let total = Object.values(scores).reduce((a,b)=>a+b, 0);
 
-        // 填入資料
         document.getElementById('webTotal').innerText = total;
         document.getElementById('pdfTotal').innerText = total;
 
@@ -327,12 +330,14 @@
             let color = s >= 20 ? "green" : (s >= 11 ? "#d39e00" : "#d9534f");
             let advice = getAdvice(s, key);
 
+            // Web View
             webAdviceHtml += `
                 <div class="web-advice-item">
                     <div style="font-weight:bold; color:#333;">${questions[key].label} <span style="color:${color}">(${s}分)</span></div>
                     <div style="font-size:0.95em; color:#666;">${advice}</div>
                 </div>`;
 
+            // PDF Table
             pdfTableHtml += `
                 <tr>
                     <td>${questions[key].label}</td>
@@ -340,6 +345,7 @@
                     <td style="color:${color}; font-weight:bold;">${status}</td>
                 </tr>`;
             
+            // PDF Advice
             pdfAdviceHtml += `
                 <div style="margin-bottom: 20px; padding: 15px; background: #fafafa; border-left: 5px solid ${color};">
                     <div style="font-weight:bold; margin-bottom:5px;">針對「${questions[key].label}」(${status}) 的建議：</div>
@@ -351,32 +357,32 @@
         document.getElementById('pdfTableBody').innerHTML = pdfTableHtml;
         document.getElementById('pdfAdviceList').innerHTML = pdfAdviceHtml;
 
-        // 清除舊圖
         if(webChart) webChart.destroy();
         if(pdfChart) pdfChart.destroy();
 
-        // 畫面切換
         document.getElementById('inputForm').style.display = 'none';
         document.getElementById('webReportArea').style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         const chartData = [scores.finance, scores.health, scores.social, scores.purpose];
-
-        // 畫 Web Chart (動畫)
         webChart = drawChart('webRadarChart', chartData, false);
-
-        // 畫 PDF Chart (無動畫，直接在螢幕外繪製)
+        
+        // PDF 版圖表在此刻繪製，因為 opacity:0，用戶看不到，但 DOM 已生成
         pdfChart = drawChart('pdfRadarChart', chartData, true);
     }
 
     function downloadPDF() {
+        // 1. 開啟遮罩，擋住底下的「移花接木」操作
         document.getElementById('loading').style.display = 'block';
 
-        // 行動裝置判斷 (含平板)
         const isMobileOrTablet = (navigator.maxTouchPoints > 0) || (window.innerWidth < 1024);
-        
-        // 抓取螢幕外的 PDF 層
         const element = document.getElementById('pdfHiddenLayer');
+
+        // 2. 關鍵時刻：將 PDF 層拉到最上層，並變成不透明
+        // 因為有 #loading (z-index: 20000) 蓋著，用戶還是只看到黑色 loading 畫面
+        // 但瀏覽器會因為 element 變成了 top-layer 而被迫繪製它 -> 解決空白問題
+        element.style.zIndex = "10000"; 
+        element.style.opacity = "1";
 
         const opt = {
             margin:       0,
@@ -386,7 +392,6 @@
                 scale: isMobileOrTablet ? 1.5 : 2, 
                 useCORS: true, 
                 scrollY: 0,
-                // 強制抓取螢幕外的座標與尺寸
                 windowWidth: 794,
                 x: 0,
                 y: 0
@@ -394,13 +399,21 @@
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(element).save().then(() => {
-            document.getElementById('loading').style.display = 'none';
-        }).catch(err => {
-            console.error(err);
-            alert('PDF 生成失敗，請重試');
-            document.getElementById('loading').style.display = 'none';
-        });
+        // 延遲 100ms 讓瀏覽器有時間 render 剛浮上來的 layer
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                // 3. 還原：PDF 產生後，把 layer 踢回最底層並隱藏
+                element.style.zIndex = "-100";
+                element.style.opacity = "0";
+                document.getElementById('loading').style.display = 'none';
+            }).catch(err => {
+                console.error(err);
+                alert('PDF 生成失敗，請重試');
+                element.style.zIndex = "-100";
+                element.style.opacity = "0";
+                document.getElementById('loading').style.display = 'none';
+            });
+        }, 100);
     }
 
     init();
