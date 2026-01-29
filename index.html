@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全方位退休準備度檢測 | 您的專屬CFP顧問</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0056b3; /* 專業藍 */
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1, h2 { color: var(--primary-color); text-align: center; }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .quadrant {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .quadrant h3 { margin-top: 0; color: #444; border-left: 5px solid var(--primary-color); padding-left: 10px;}
+        .question-group { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .question-label { flex: 1; font-weight: 500; }
+        .score-input { width: 60px; padding: 5px; text-align: center; }
+        input[type="range"] { flex: 1; margin: 0 15px; cursor: pointer; }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .btn:hover { background-color: #004494; }
+        .btn-download { background-color: #28a745; display: none; margin-top: 10px;} /* 綠色 */
+        
+        /* 結果區域樣式 */
+        #resultArea {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            background-color: #fff;
+        }
+        .score-summary {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .advice-box { margin-bottom: 15px; }
+        .advice-title { font-weight: bold; color: var(--primary-color); }
+        .advice-content { font-size: 0.95em; color: #555; }
+        .total-score { text-align: center; font-size: 1.5em; font-weight: bold; color: #d9534f; margin: 20px 0; }
+
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; width: 100%; max-width: 100%; }
+            .btn, input[type="range"] { display: none; }
+            .score-val { display: inline-block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="reportContent">
+    <h1>深度訊號檢測：全方位退休準備度</h1>
+    <p style="text-align: center; color: #666;">請依據現況評分 (0分:極差/無 ~ 5分:完美/充足)</p>
+
+    <form id="quizForm">
+        <div class="quadrant" id="q1">
+            <h3>象限一：財務基站 (經濟安全)</h3>
+            <div id="q1-inputs"></div>
+        </div>
+
+        <div class="quadrant" id="q2">
+            <h3>象限二：身心續航 (健康資產)</h3>
+            <div id="q2-inputs"></div>
+        </div>
+
+        <div class="quadrant" id="q3">
+            <h3>象限三：社交漫遊 (社會連結)</h3>
+            <div id="q3-inputs"></div>
+        </div>
+
+        <div class="quadrant" id="q4">
+            <h3>象限四：第二人生 (自我實現)</h3>
+            <div id="q4-inputs"></div>
+        </div>
+
+        <button type="button" class="btn" onclick="generateReport()">開始診斷並生成報告</button>
+    </form>
+
+    <div id="resultArea">
+        <h2 style="margin-top:0;">【您的專屬退休診斷書】</h2>
+        <div class="total-score" id="totalScoreDisplay"></div>
+        <div class="score-summary" id="scoreBreakdown"></div>
+        <hr>
+        <div id="adviceContainer"></div>
+        <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #999;">
+            本報告由 AI 輔助生成，僅供規劃參考。<br>建議預約您的 CFP 顧問進行深入解讀。
+        </p>
+    </div>
+</div>
+
+<div class="container" style="background: transparent; box-shadow: none; padding-top: 0;">
+    <button id="downloadBtn" class="btn btn-download" onclick="downloadPDF()">下載 PDF 報告</button>
+</div>
+
+<script>
+    // 題目資料庫
+    const questions = {
+        finance: ["被動收入覆蓋率", "緊急預備金充足度", "醫療防禦係數", "負債歸零計畫", "資產配置多元性"],
+        health: ["身體質量指數 (BMI)", "肌肉量與行動力", "規律運動習慣", "睡眠品質", "家族病史追蹤"],
+        social: ["非職場朋友數量", "跨代連結頻率", "社群參與度", "親密關係帳戶", "緊急救援網"],
+        purpose: ["身份認同切換", "時間結構化能力", "心流體驗頻率", "學習新技能意願", "圓夢執行力"]
+    };
+
+    // 初始化題目
+    function initQuestions() {
+        ['finance', 'health', 'social', 'purpose'].forEach((key, index) => {
+            const container = document.getElementById(`q${index+1}-inputs`);
+            questions[key].forEach((q, i) => {
+                const div = document.createElement('div');
+                div.className = 'question-group';
+                div.innerHTML = `
+                    <span class="question-label">${q}</span>
+                    <input type="range" min="0" max="5" value="0" oninput="this.nextElementSibling.innerText = this.value" class="q-input" data-cat="${key}">
+                    <span class="score-val" style="width: 30px; text-align: center; font-weight:bold;">0</span> 分
+                `;
+                container.appendChild(div);
+            });
+        });
+    }
+
+    // 邏輯核心：產生建議
+    function getAdvice(score, type) {
+        let level = score >= 20 ? 'high' : (score >= 11 ? 'mid' : 'low');
+        
+        const logic = {
+            finance: {
+                low: "【警報：生存焦慮期】被動收入不足。建議立即執行「債務雪球法」，並強迫儲蓄存滿3個月緊急預備金。",
+                mid: "【警報：資產累積期】收支尚可但脆弱。建議將被動收入覆蓋率目標設為70%，並補足長照與醫療險缺口。",
+                high: "【狀態：財富傳承期】財務自由。建議諮詢信託架構或稅務規劃，確保資產能依意願有效傳承。"
+            },
+            health: {
+                low: "【警報：健康崩壞期】這是退休最大風險。請立即預約健檢，並從「每天步行15分鐘」與減糖飲食開始。",
+                mid: "【警報：亞健康調整期】肌力可能流失。建議每週增加2次阻力訓練，並配戴裝置監控睡眠數據。",
+                high: "【狀態：樂活長壽期】體況極佳。建議挑戰需「腦體協調」的新運動（如網球、舞蹈）以維持優勢。"
+            },
+            social: {
+                low: "【警報：孤島效應期】生活圈狹窄。建議每月主動聯繫一位老友，並強制自己參加一個實體興趣社團。",
+                mid: "【警報：社交重組期】連結深度不足。建議挑選3位朋友建立深度聚會，並建立緊急互助聯絡網。",
+                high: "【狀態：社群樞紐期】人脈廣闊。建議進行社交斷捨離，將時間留給家人與利他傳承的活動。"
+            },
+            purpose: {
+                low: "【警報：失去重力期】自我價值迷惘。請練習自我介紹時「不提職稱」，並列出10個興趣進行低成本試錯。",
+                mid: "【警報：探索定錨期】缺乏執行力。請設定具體的學習目標（如考證照），將興趣轉化為小型的價值產出。",
+                high: "【狀態：自我實現期】目標清晰。請即刻啟動圓夢大計畫，或透過寫作演講分享智慧。"
+            }
+        };
+        return logic[type][level];
+    }
+
+    function generateReport() {
+        let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
+        
+        // 計算分數
+        document.querySelectorAll('.q-input').forEach(input => {
+            scores[input.dataset.cat] += parseInt(input.value);
+        });
+
+        let total = Object.values(scores).reduce((a, b) => a + b, 0);
+
+        // 渲染結果
+        document.getElementById('totalScoreDisplay').innerText = `總分：${total} / 100`;
+        
+        // 渲染細項分數
+        document.getElementById('scoreBreakdown').innerHTML = `
+            <div>💰 財務: ${scores.finance}</div>
+            <div>💪 健康: ${scores.health}</div>
+            <div>🤝 社交: ${scores.social}</div>
+            <div>🌟 成長: ${scores.purpose}</div>
+        `;
+
+        // 渲染建議
+        let adviceHtml = '';
+        const labels = { finance: '財務基站', health: '身心續航', social: '社交漫遊', purpose: '第二人生' };
+        
+        for (let key in scores) {
+            adviceHtml += `
+                <div class="advice-box">
+                    <div class="advice-title">${labels[key]} (得分: ${scores[key]})</div>
+                    <div class="advice-content">${getAdvice(scores[key], key)}</div>
+                </div>
+            `;
+        }
+        document.getElementById('adviceContainer').innerHTML = adviceHtml;
+
+        // 顯示結果區與下載按鈕
+        document.getElementById('resultArea').style.display = 'block';
+        document.getElementById('downloadBtn').style.display = 'block';
+        
+        // 捲動到結果
+        document.getElementById('resultArea').scrollIntoView({behavior: "smooth"});
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('reportContent');
+        const opt = {
+            margin:       10,
+            filename:     'My_Retirement_Scorecard.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        // 隱藏按鈕再截圖，避免截到按鈕
+        document.querySelector('.btn').style.display = 'none';
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            // 恢復按鈕顯示
+            document.querySelector('.btn').style.display = 'block';
+        });
+    }
+
+    // 啟動
+    initQuestions();
+</script>
+
+</body>
+</html>
