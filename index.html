@@ -60,124 +60,123 @@
         }
         .btn:hover { background-color: #004494; }
 
-        /* === PDF 報告專用樣式 (整形手術區) === */
+        /* === PDF 報告樣式 (關鍵修正區) === */
         #reportCard {
-            display: none; /* 平常隱藏 */
+            display: none; /* 初始隱藏 */
             background: white;
-            /* 移除所有外部邊距，避免 PDF 頂部留白 */
-            margin: 0; 
-            padding: 0; 
             width: 100%;
+            /* 修正：移除多餘邊距，避免溢出 */
+            margin: 0; 
+            padding: 0;
         }
 
         /* 第一頁：總結區 */
         .page-one {
-            /* 設定最小高度，確保佔滿一頁的視覺感，但不要強制 overflow */
-            padding: 20px 40px;
-            /* 關鍵：強制這一頁結束後必須換頁 */
-            page-break-after: always;
-            break-after: page;
-            border-bottom: 1px dashed #ddd; /* 視覺輔助，看到這裡結束 */
+            padding: 30px 40px;
+            background: #fff;
+            /* 修正：移除 page-break-after，避免與下一頁的 before 衝突 */
+            margin-bottom: 0;
         }
 
-        /* 消除標題頂部的預設留白 */
+        /* 標題強制歸零，避免頂部留白 */
         .page-one h2 { margin-top: 0; padding-top: 0; color: var(--primary-color); text-align: center; }
 
         /* 第二頁：詳情區 */
         .page-two {
-            padding: 20px 40px;
-            /* 確保從新的一頁開始 */
-            page-break-before: always;
+            padding: 30px 40px;
+            background: #fff;
+            /* 關鍵修正：只在這裡設定強制換頁，確保從新頁面開始 */
+            page-break-before: always; 
         }
 
-        /* 表格優化 */
+        /* 表格樣式 */
         .score-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 30px 0;
+            margin: 20px 0;
         }
         .score-table th, .score-table td {
-            border: 1px solid #333; /* 改成深色邊框比較清楚 */
-            padding: 12px;
+            border: 1px solid #333;
+            padding: 10px;
             text-align: center;
         }
         .score-table th { background-color: var(--primary-color); color: white; }
 
         /* 行動建議卡 */
         .action-item {
-            margin-bottom: 15px;
-            padding: 15px;
+            margin-bottom: 12px;
+            padding: 12px;
             background: var(--accent-color);
             border-left: 6px solid var(--primary-color);
             border-radius: 4px;
         }
-        .action-title { font-weight: bold; color: #333; margin-bottom: 5px; }
-        .action-text { font-size: 0.95em; color: #555; text-align: justify; line-height: 1.6; }
+        .action-title { font-weight: bold; color: #333; margin-bottom: 4px; }
+        .action-text { font-size: 0.95em; color: #555; text-align: justify; line-height: 1.5; }
 
         .footer-note {
             text-align: center;
             font-size: 0.8em;
             color: #888;
-            margin-top: 50px;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="mainContainer">
+<div class="container" id="mainWrapper">
+    
     <div id="inputForm">
         <h1>退休準備度檢測站</h1>
         <p style="text-align: center; color: #666;">請滑動評分 (0分:不足 ~ 5分:充足)</p>
         <div id="quizContainer"></div>
         <button type="button" class="btn" onclick="generateReport()">查看診斷結果</button>
     </div>
-</div>
 
-<div id="reportCard">
-    
-    <div class="page-one">
-        <h2 style="padding-top: 10px;">全方位退休準備度診斷書</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 30px;">診斷日期：<span id="reportDate"></span></p>
+    <div id="reportCard">
+        
+        <div class="page-one">
+            <h2>全方位退休準備度診斷書</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">診斷日期：<span id="reportDate"></span></p>
 
-        <div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
-            <div style="font-size: 1.2em; color: #555;">您的綜合評估得分</div>
-            <div style="font-size: 3.5em; font-weight: bold; color: #d9534f; line-height: 1.2;">
-                <span id="finalTotal">0</span> <span style="font-size: 0.4em; color:#888;">/ 100</span>
+            <div style="text-align: center; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <div style="font-size: 1.1em; color: #555;">您的綜合評估得分</div>
+                <div style="font-size: 3em; font-weight: bold; color: #d9534f; line-height: 1.2;">
+                    <span id="finalTotal">0</span> <span style="font-size: 0.4em; color:#888;">/ 100</span>
+                </div>
+            </div>
+
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th width="35%">檢測面向</th>
+                        <th width="25%">得分</th>
+                        <th width="40%">狀態評估</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreTableBody"></tbody>
+            </table>
+            
+            <div class="footer-note" style="border:none; margin-top: 40px;">
+                ( 下一頁：您的專屬行動方針 )
             </div>
         </div>
 
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th width="35%">檢測面向</th>
-                    <th width="25%">得分</th>
-                    <th width="40%">狀態評估</th>
-                </tr>
-            </thead>
-            <tbody id="scoreTableBody"></tbody>
-        </table>
-        
-        <div class="footer-note">
-            ( 第 1 頁 / 共 2 頁 )
+        <div class="page-two">
+            <h3 style="color: var(--primary-color); border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 0;">【專屬行動方針】</h3>
+            
+            <div id="actionPlanList"></div>
+
+            <div class="footer-note">
+                本報告由 AI 輔助系統生成<br>建議預約您的 CFP 顧問進行深入解讀
+            </div>
         </div>
-    </div>
-
-    <div class="page-two">
-        <h3 style="color: var(--primary-color); border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 0;">【專屬行動方針】</h3>
         
-        <div id="actionPlanList"></div>
-
-        <div class="footer-note">
-            本報告由 AI 輔助系統生成<br>建議預約您的 CFP 顧問進行深入解讀
+        <div style="padding: 20px 40px; text-align: center;">
+            <button class="btn" style="background-color: #28a745;" onclick="downloadPDF()">📥 下載完整 PDF 報告</button>
+            <button class="btn" style="background-color: #6c757d; margin-top: 10px;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
+
     </div>
-
-</div>
-
-<div class="container" id="downloadSection" style="display:none; text-align: center; margin-top: 20px; box-shadow: none; padding: 0;">
-    <p style="color: green;">✅ 診斷完成！報告已生成。</p>
-    <button class="btn" style="background-color: #28a745;" onclick="downloadPDF()">📥 下載完整 PDF 報告</button>
-    <button class="btn" style="background-color: #6c757d; margin-top: 10px;" onclick="location.reload()">🔄 重新測驗</button>
 </div>
 
 <script>
@@ -269,27 +268,35 @@
         document.getElementById('scoreTableBody').innerHTML = tableHtml;
         document.getElementById('actionPlanList').innerHTML = actionHtml;
 
-        // 隱藏輸入區，顯示下載區
-        document.getElementById('mainContainer').style.display = 'none';
-        document.getElementById('downloadSection').style.display = 'block';
+        // 修正：隱藏輸入區，直接顯示報告區 (包含兩頁內容與下載按鈕)
+        document.getElementById('inputForm').style.display = 'none';
+        document.getElementById('reportCard').style.display = 'block';
+        
+        // 滾動到頂部以便閱讀
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function downloadPDF() {
-        // 抓取 reportCard，這時候我們要在背景短暫顯示它以供截圖，但不需要讓使用者看到亂跑的版面
-        const element = document.getElementById('reportCard');
-        element.style.display = 'block'; // 必須顯示才能截圖
+        // 這裡我們選擇只截取 "page-one" 和 "page-two" 的父容器，不包含下載按鈕
+        // 為了做到這點，我們動態創建一個臨時容器，或者利用 html2pdf 的選擇器
+        // 由於 reportCard 裡面現在包含了按鈕，我們需要稍微技巧性地排除按鈕，
+        // 最簡單的方法是：下載時暫時隱藏按鈕，下載完再顯示。
+        
+        const btns = document.querySelectorAll('#reportCard .btn');
+        btns.forEach(b => b.style.display = 'none'); // 暫時隱藏按鈕
 
+        const element = document.getElementById('reportCard');
+        
         const opt = {
-            margin:       10, // 設定適中的邊距 (mm)
+            margin:       0, // 邊距歸零，完全交給 CSS 控制
             filename:     '退休準備度診斷報告.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            // 這裡不需要 pagebreak 設定，因為我們已經在 CSS 用 page-break-after/before 強制控制了
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
         
         html2pdf().set(opt).from(element).save().then(() => {
-            element.style.display = 'none'; // 下載完後再次隱藏
+            btns.forEach(b => b.style.display = 'block'); // 恢復按鈕顯示
         });
     }
 
