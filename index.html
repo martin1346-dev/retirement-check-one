@@ -23,7 +23,7 @@
             overflow-x: hidden;
         }
 
-        /* === 1. 手機操作介面 (預設顯示) === */
+        /* === 1. 手機/電腦操作介面 === */
         #mobileAppLayer {
             display: block;
             max-width: 800px;
@@ -34,16 +34,17 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* === 2. PDF 列印介面 (預設隱藏) === */
+        /* === 2. PDF 列印介面 (三頁式結構) === */
         #pdfPrintLayer {
-            display: none; 
+            display: none; /* 平常隱藏 */
             width: 794px; /* A4 寬度 */
             background: white;
-            margin: 0; 
+            /* 修正：使用標準 margin，避免絕對定位造成的電腦版跑位 */
+            margin: 0 auto; 
             padding: 0;
         }
 
-        /* PDF 單頁容器：每一頁都是獨立的 Block */
+        /* PDF 單頁容器 */
         .pdf-page {
             width: 794px;
             min-height: 1120px; /* A4 高度 */
@@ -51,14 +52,19 @@
             box-sizing: border-box;
             background: white;
             position: relative;
-            /* 預覽時的分隔線 */
-            border-bottom: 2px dashed #ddd; 
+            border-bottom: 1px dashed #eee; /* 預覽分隔線 */
+        }
+
+        /* 換頁切割點 */
+        .html2pdf__page-break {
+            page-break-before: always;
+            height: 0;
+            display: block;
         }
 
         /* === UI 元件 === */
         h1 { color: var(--primary-color); text-align: center; margin-bottom: 20px; }
         .btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 5px; font-size: 1.2em; margin-top: 25px; cursor: pointer; }
-        .btn:hover { background-color: #004494; }
         
         .quadrant-box { background: #fafafa; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
         .quadrant-title { font-weight: bold; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 12px; font-size: 1.1em; }
@@ -77,18 +83,19 @@
         /* 圖表容器 */
         .chart-box-web { position: relative; height: 300px; width: 100%; max-width: 500px; margin: 30px auto; }
         
-        /* PDF 第三頁圖表 (加大並確保置中) */
+        /* PDF 第三頁圖表 (加大) */
         .chart-box-pdf { 
             position: relative; 
             width: 600px; 
             height: 500px; 
-            margin: 50px auto; 
+            margin: 40px auto; 
+            /* 確保圖表區塊是 block */
             display: block;
         }
 
         /* PDF 表格 */
-        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 16px; }
-        .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 15px; text-align: center; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 40px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 12px; text-align: center; }
         .pdf-table th { background: var(--primary-color); color: white; }
         
         /* 遮罩 */
@@ -103,8 +110,8 @@
 
 <div id="loadingOverlay">
     <div style="font-size:3em; margin-bottom:15px;">📄</div>
-    <div style="font-size:1.2em; font-weight:bold;">正在製作三頁式報告...</div>
-    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(系統將強制調整版面，請稍候)</div>
+    <div style="font-size:1.2em; font-weight:bold;">正在製作報告...</div>
+    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(手機版製作時間約需 3-5 秒)</div>
 </div>
 
 <div id="mobileAppLayer">
@@ -147,7 +154,6 @@
         <div style="text-align:center; background:#f8f9fa; padding:30px; margin:40px 50px; border-radius:15px;">
             <div style="font-size:1.5em; color:#555;">綜合評估得分</div>
             <div style="font-size:6em; font-weight:bold; color:#d9534f; line-height:1.1;" id="pdfTotal">0</div>
-            <div style="color:#888;">滿分 100</div>
         </div>
 
         <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:60px; font-size: 20px;">第一部分：各面向詳細得分</h3>
@@ -163,6 +169,8 @@
         </div>
     </div>
 
+    <div class="html2pdf__page-break"></div>
+
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:20px; font-size: 20px;">第二部分：專屬行動方針</h3>
         <div id="pdfAdviceList" style="margin-top: 30px;"></div>
@@ -172,11 +180,13 @@
         </div>
     </div>
 
+    <div class="html2pdf__page-break"></div>
+
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:20px; font-size: 20px;">第三部分：五力分析視覺化</h3>
         
         <div style="text-align:center; margin-top: 30px; color:#666; font-size: 16px;">
-            下圖展示了您在四大面向的平衡狀態，面積越大代表準備越充分。
+            下圖展示了您在四大面向的平衡狀態
         </div>
 
         <div class="chart-box-pdf">
@@ -252,7 +262,6 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                // PDF版強制關閉動畫，確保截圖有內容
                 animation: isPdf ? false : { duration: 1000 },
                 scales: {
                     r: { 
@@ -306,29 +315,29 @@
         webChart = drawChart('webRadarChart', data, false);
     }
 
+    // === 核心：安全下載流程 (V26.0) ===
     async function startPdfProcess() {
         document.getElementById('loadingOverlay').style.display = 'block';
         
-        // 1. [物理接管] 鎖定 Body 寬度與樣式，強制進入 A4 寬度模式
-        const originalWidth = document.body.style.width;
+        // 1. 儲存原始 Body 樣式
         const originalPadding = document.body.style.padding;
         const originalMargin = document.body.style.margin;
         
-        document.body.style.width = '794px'; // 強制 A4 寬度
+        // 2. 暫時移除 Body 邊距，讓 PDF 介面貼滿視窗 (避免電腦版截圖偏移)
         document.body.style.padding = '0';
         document.body.style.margin = '0';
 
-        // 2. 切換畫面：隱藏手機版，顯示三頁式 PDF 版
+        // 3. 畫面切換：手機介面隱藏，PDF 介面顯示
         document.getElementById('mobileAppLayer').style.display = 'none';
         document.getElementById('pdfPrintLayer').style.display = 'block';
 
-        // 3. 歸零捲動 (重要!)
+        // 4. 強制捲動歸零 (確保從頭截圖)
         window.scrollTo(0, 0);
 
-        // 4. 等待 DOM 重繪
+        // 5. 等待 DOM 重繪
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // 5. 繪製 PDF 第三頁的雷達圖 (此時 Canvas 是可見的且有寬度)
+        // 6. 繪製 PDF 圖表
         let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
         document.querySelectorAll('input[type="range"]').forEach(input => {
             scores[input.dataset.cat] += parseInt(input.value);
@@ -338,44 +347,43 @@
         if(pdfChart) pdfChart.destroy();
         pdfChart = drawChart('pdfRadarChart', data, true);
 
-        // 6. 等待圖表渲染完成 (500ms)
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 7. 等待圖表完成 (1秒)
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // 7. 再一次歸零 (雙重保險)
+        // 8. 再一次歸零
         window.scrollTo(0, 0);
 
-        // 8. 截圖
+        // 9. 設定截圖參數 (智慧降規)
         const element = document.getElementById('pdfPrintLayer');
+        const isMobile = window.innerWidth < 800; // 簡易判斷
+        
         const opt = {
             margin: 0,
             filename: '退休準備度診斷報告.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
-                scale: 2, 
+                scale: isMobile ? 1.0 : 2, // [關鍵] 手機版降為 1 倍，避免記憶體崩潰
                 useCORS: true, 
                 scrollY: 0, 
-                windowWidth: 794, // 配合 Body 寬度
+                windowWidth: 794, // 告訴瀏覽器模擬 794px 寬度
                 x: 0, y: 0
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
         };
 
         try {
             await html2pdf().set(opt).from(element).save();
         } catch (err) {
-            console.error(err);
-            alert('PDF 生成失敗，請重試');
+            alert('PDF 製作發生錯誤：' + (err.message || err));
         } finally {
-            // 9. [還原現場]
-            document.body.style.width = originalWidth || '';
+            // 10. 還原現場
             document.body.style.padding = originalPadding;
             document.body.style.margin = originalMargin;
 
             document.getElementById('pdfPrintLayer').style.display = 'none';
             document.getElementById('mobileAppLayer').style.display = 'block';
             document.getElementById('loadingOverlay').style.display = 'none';
-            
-            // 讓使用者看得到手機介面
             window.scrollTo(0, 0);
         }
     }
