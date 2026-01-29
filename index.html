@@ -7,9 +7,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
-            --primary-color: #0056b3; /* 專業藍 */
+            --primary-color: #0056b3;
+            --accent-color: #e9ecef;
             --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
         }
         body {
             font-family: "Microsoft JhengHei", Arial, sans-serif;
@@ -22,26 +22,33 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: var(--card-bg);
+            background: #ffffff;
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         h1, h2 { color: var(--primary-color); text-align: center; }
-        h1 { border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        .quadrant {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
+        
+        /* 輸入區樣式 */
+        .input-section { margin-bottom: 20px; }
+        .quadrant-box {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
             border-radius: 8px;
-            background-color: #fafafa;
         }
-        .quadrant h3 { margin-top: 0; color: #444; border-left: 5px solid var(--primary-color); padding-left: 10px;}
-        .question-group { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .question-label { flex: 1; font-weight: 500; }
-        .score-input { width: 60px; padding: 5px; text-align: center; }
+        .quadrant-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .question-row { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
         input[type="range"] { flex: 1; margin: 0 15px; cursor: pointer; }
         
+        /* 按鈕樣式 */
         .btn {
             display: block;
             width: 100%;
@@ -52,86 +59,102 @@
             border-radius: 5px;
             font-size: 1.2em;
             cursor: pointer;
-            margin-top: 20px;
             transition: background 0.3s;
+            margin-top: 20px;
         }
         .btn:hover { background-color: #004494; }
-        .btn-download { background-color: #28a745; display: none; margin-top: 10px;} /* 綠色 */
-        
-        /* 結果區域樣式 */
-        #resultArea {
-            display: none;
-            margin-top: 40px;
-            padding: 30px;
-            border: 2px solid var(--primary-color);
-            border-radius: 10px;
-            background-color: #fff;
-        }
-        .score-summary {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-            background: #eee;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .advice-box { margin-bottom: 15px; }
-        .advice-title { font-weight: bold; color: var(--primary-color); }
-        .advice-content { font-size: 0.95em; color: #555; }
-        .total-score { text-align: center; font-size: 1.5em; font-weight: bold; color: #d9534f; margin: 20px 0; }
+        .btn-download { background-color: #28a745; display: none; margin-top: 15px; } /* 綠色 */
 
-        @media print {
-            body { background: white; }
-            .container { box-shadow: none; width: 100%; max-width: 100%; }
-            .btn, input[type="range"] { display: none; }
-            .score-val { display: inline-block !important; }
+        /* === 重點修改：PDF 報告專用區域 === */
+        #reportCard {
+            display: none; /* 預設隱藏 */
+            border: 2px solid var(--primary-color);
+            padding: 30px;
+            background: white;
+            margin-top: 30px;
+            border-radius: 10px;
+        }
+        
+        /* 報告內的表格樣式 */
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .score-table th, .score-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .score-table th { background-color: var(--primary-color); color: white; }
+        .score-table tr:nth-child(even) { background-color: #f2f2f2; }
+        
+        /* 報告內的行動建議 */
+        .action-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: var(--accent-color);
+            border-left: 5px solid var(--primary-color);
+            border-radius: 4px;
+        }
+        .action-title { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .action-text { font-size: 0.95em; color: #555; }
+        
+        .footer-note {
+            text-align: center;
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="reportContent">
-    <h1>深度訊號檢測：全方位退休準備度</h1>
-    <p style="text-align: center; color: #666;">請依據現況評分 (0分:極差/無 ~ 5分:完美/充足)</p>
-
-    <form id="quizForm">
-        <div class="quadrant" id="q1">
-            <h3>象限一：財務基站 (經濟安全)</h3>
-            <div id="q1-inputs"></div>
-        </div>
-
-        <div class="quadrant" id="q2">
-            <h3>象限二：身心續航 (健康資產)</h3>
-            <div id="q2-inputs"></div>
-        </div>
-
-        <div class="quadrant" id="q3">
-            <h3>象限三：社交漫遊 (社會連結)</h3>
-            <div id="q3-inputs"></div>
-        </div>
-
-        <div class="quadrant" id="q4">
-            <h3>象限四：第二人生 (自我實現)</h3>
-            <div id="q4-inputs"></div>
-        </div>
-
-        <button type="button" class="btn" onclick="generateReport()">開始診斷並生成報告</button>
-    </form>
-
-    <div id="resultArea">
-        <h2 style="margin-top:0;">【您的專屬退休診斷書】</h2>
-        <div class="total-score" id="totalScoreDisplay"></div>
-        <div class="score-summary" id="scoreBreakdown"></div>
-        <hr>
-        <div id="adviceContainer"></div>
-        <p style="text-align: center; margin-top: 30px; font-size: 0.8em; color: #999;">
-            本報告僅供規劃參考。<br>建議預約您的 CFP 林馬丁顧問進行深入解讀。
-        </p>
+<div class="container">
+    <h1>退休準備度檢測站</h1>
+    
+    <div id="inputForm">
+        <p style="text-align: center; color: #666;">請滑動評分 (0分:不足 ~ 5分:充足)</p>
+        <div id="quizContainer"></div>
+        <button type="button" class="btn" onclick="generateReport()">查看診斷結果</button>
     </div>
-</div>
 
-<div class="container" style="background: transparent; box-shadow: none; padding-top: 0;">
-    <button id="downloadBtn" class="btn btn-download" onclick="downloadPDF()">下載 PDF 報告</button>
+    <div id="reportCard">
+        <h2 style="margin-bottom: 5px;">全方位退休準備度診斷書</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">診斷日期：<span id="reportDate"></span></p>
+
+        <div style="text-align: center; font-size: 1.5em; font-weight: bold; color: #d9534f; margin: 10px 0;">
+            總分：<span id="finalTotal">0</span> / 100
+        </div>
+
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>檢測面向</th>
+                    <th>您的得分 (滿分25)</th>
+                    <th>狀態評估</th>
+                </tr>
+            </thead>
+            <tbody id="scoreTableBody">
+                </tbody>
+        </table>
+
+        <h3 style="border-bottom: 2px solid #ccc; padding-bottom: 10px;">【專屬行動方針】</h3>
+        <div id="actionPlanList">
+            </div>
+
+        <div class="footer-note">
+            本報告由 AI 輔助系統生成，僅供規劃參考。<br>
+            詳細資產配置建議請預約您的 CFP 顧問諮詢。
+        </div>
+    </div>
+
+    <button id="downloadBtn" class="btn btn-download" onclick="downloadPDF()">📥 下載此報告 (PDF)</button>
+    
+    <button id="resetBtn" class="btn" style="background-color: #6c757d; display:none; margin-top:10px;" onclick="location.reload()">🔄 重新測驗</button>
+
 </div>
 
 <script>
@@ -143,115 +166,124 @@
         purpose: ["身份認同切換 (0分 無法 | 5分 順利轉換)", "時間結構化能力 (0分 混亂 | 5分 井然有序)", "心流體驗頻率 (0分 無 | 5分 經常發生)", "學習新技能意願 (0分 無意願 | 5分 持續學習)", "圓夢執行力 (0分 拖延 | 5分 積極行動)"]
     };
 
-    // 初始化題目
-    function initQuestions() {
-        ['finance', 'health', 'social', 'purpose'].forEach((key, index) => {
-            const container = document.getElementById(`q${index+1}-inputs`);
-            questions[key].forEach((q, i) => {
-                const div = document.createElement('div');
-                div.className = 'question-group';
-                div.innerHTML = `
-                    <span class="question-label">${q}</span>
-                    <input type="range" min="0" max="5" value="0" oninput="this.nextElementSibling.innerText = this.value" class="q-input" data-cat="${key}">
-                    <span class="score-val" style="width: 30px; text-align: center; font-weight:bold;">0</span> 分
+    // 初始化介面
+    function init() {
+        const container = document.getElementById('quizContainer');
+        for (let key in questions) {
+            let section = document.createElement('div');
+            section.className = 'quadrant-box';
+            let html = `<div class="quadrant-title">${questions[key].label}</div>`;
+            
+            questions[key].items.forEach(item => {
+                html += `
+                    <div class="question-row">
+                        <span style="flex:1">${item}</span>
+                        <input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.nextElementSibling.innerText = this.value">
+                        <span style="width:20px; text-align:center; font-weight:bold;">0</span>
+                    </div>
                 `;
-                container.appendChild(div);
             });
-        });
+            section.innerHTML = html;
+            container.appendChild(section);
+        }
+        // 設定日期
+        document.getElementById('reportDate').innerText = new Date().toLocaleDateString();
     }
 
-    // 邏輯核心：產生建議
+    // 取得建議邏輯
     function getAdvice(score, type) {
         let level = score >= 20 ? 'high' : (score >= 11 ? 'mid' : 'low');
-        
         const logic = {
             finance: {
-                low: "【警報：生存焦慮期】被動收入不足。建議立即執行「債務雪球法」，並強迫儲蓄存滿3個月緊急預備金。",
-                mid: "【警報：資產累積期】收支尚可但脆弱。建議將被動收入覆蓋率目標設為70%，並補足長照與醫療險缺口。",
-                high: "【狀態：財富傳承期】財務自由。建議諮詢信託架構或稅務規劃，確保資產能依意願有效傳承。"
+                low: "警報 (生存焦慮)：被動收入不足。優先執行債務雪球法，存滿3個月緊急預備金。",
+                mid: "警報 (資產累積)：資產脆弱。目標將被動收入覆蓋率提升至70%，補足長照缺口。",
+                high: "優良 (財富傳承)：財務自由。建議諮詢信託與稅務規劃，確保資產有效傳承。"
             },
             health: {
-                low: "【警報：健康崩壞期】這是退休最大風險。請立即預約健檢，並從「每天步行15分鐘」與減糖飲食開始。",
-                mid: "【警報：亞健康調整期】肌力可能流失。建議每週增加2次阻力訓練，並配戴裝置監控睡眠數據。",
-                high: "【狀態：樂活長壽期】體況極佳。建議挑戰需「腦體協調」的新運動（如網球、舞蹈）以維持優勢。"
+                low: "警報 (健康崩壞)：風險極高。立即預約健檢，從每天步行15分鐘開始，減少精緻糖。",
+                mid: "警報 (亞健康)：肌力流失中。每週需增加2次阻力訓練，並監控睡眠數據。",
+                high: "優良 (樂活長壽)：體況極佳。持續挑戰需腦體協調的新運動（如網球、舞蹈）。"
             },
             social: {
-                low: "【警報：孤島效應期】生活圈狹窄。建議每月主動聯繫一位老友，並強制自己參加一個實體興趣社團。",
-                mid: "【警報：社交重組期】連結深度不足。建議挑選3位朋友建立深度聚會，並建立緊急互助聯絡網。",
-                high: "【狀態：社群樞紐期】人脈廣闊。建議進行社交斷捨離，將時間留給家人與利他傳承的活動。"
+                low: "警報 (孤島效應)：生活封閉。每月主動聯繫一位老友，強制參加一個實體社團。",
+                mid: "警報 (社交重組)：連結深度不足。挑選3位朋友建立深度聚會，建立緊急互助網。",
+                high: "優良 (社群樞紐)：人脈廣闊。建議進行社交斷捨離，專注於滋養心靈的關係。"
             },
             purpose: {
-                low: "【警報：失去重力期】自我價值迷惘。請練習自我介紹時「不提職稱」，並列出10個興趣進行低成本試錯。",
-                mid: "【警報：探索定錨期】缺乏執行力。請設定具體的學習目標（如考證照），將興趣轉化為小型的價值產出。",
-                high: "【狀態：自我實現期】目標清晰。請即刻啟動圓夢大計畫，或透過寫作演講分享智慧。"
+                low: "警報 (失去重力)：自我迷惘。練習不提職稱介紹自己，列出10個興趣低成本試錯。",
+                mid: "警報 (探索定錨)：缺乏執行。設定具體學習目標，將興趣轉化為小型價值產出。",
+                high: "優良 (自我實現)：目標清晰。即刻啟動圓夢大計畫，透過演講或寫作傳承智慧。"
             }
         };
         return logic[type][level];
     }
 
+    // 生成報告
     function generateReport() {
         let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
-        
-        // 計算分數
-        document.querySelectorAll('.q-input').forEach(input => {
+        document.querySelectorAll('input[type="range"]').forEach(input => {
             scores[input.dataset.cat] += parseInt(input.value);
         });
 
-        let total = Object.values(scores).reduce((a, b) => a + b, 0);
+        let total = Object.values(scores).reduce((a,b)=>a+b, 0);
+        document.getElementById('finalTotal').innerText = total;
 
-        // 渲染結果
-        document.getElementById('totalScoreDisplay').innerText = `總分：${total} / 100`;
+        // 產生表格內容
+        let tableHtml = '';
+        let actionHtml = '';
         
-        // 渲染細項分數
-        document.getElementById('scoreBreakdown').innerHTML = `
-            <div>💰 財務: ${scores.finance}</div>
-            <div>💪 健康: ${scores.health}</div>
-            <div>🤝 社交: ${scores.social}</div>
-            <div>🌟 成長: ${scores.purpose}</div>
-        `;
+        for (let key in questions) {
+            let s = scores[key];
+            let status = s >= 20 ? "🌟 優良" : (s >= 11 ? "⚠️ 尚可" : "🔴 加油");
+            let color = s >= 20 ? "green" : (s >= 11 ? "orange" : "red");
+            
+            // 表格行
+            tableHtml += `
+                <tr>
+                    <td>${questions[key].label}</td>
+                    <td style="font-weight:bold; font-size:1.1em;">${s}</td>
+                    <td style="color:${color}; font-weight:bold;">${status}</td>
+                </tr>
+            `;
 
-        // 渲染建議
-        let adviceHtml = '';
-        const labels = { finance: '財務基站', health: '身心續航', social: '社交漫遊', purpose: '第二人生' };
-        
-        for (let key in scores) {
-            adviceHtml += `
-                <div class="advice-box">
-                    <div class="advice-title">${labels[key]} (得分: ${scores[key]})</div>
-                    <div class="advice-content">${getAdvice(scores[key], key)}</div>
+            // 行動建議卡
+            actionHtml += `
+                <div class="action-item">
+                    <div class="action-title">針對「${questions[key].label}」的建議：</div>
+                    <div class="action-text">${getAdvice(s, key)}</div>
                 </div>
             `;
         }
-        document.getElementById('adviceContainer').innerHTML = adviceHtml;
 
-        // 顯示結果區與下載按鈕
-        document.getElementById('resultArea').style.display = 'block';
+        document.getElementById('scoreTableBody').innerHTML = tableHtml;
+        document.getElementById('actionPlanList').innerHTML = actionHtml;
+
+        // UI 切換
+        document.getElementById('inputForm').style.display = 'none'; // 隱藏輸入區
+        document.getElementById('reportCard').style.display = 'block'; // 顯示報告區
         document.getElementById('downloadBtn').style.display = 'block';
+        document.getElementById('resetBtn').style.display = 'block';
         
-        // 捲動到結果
-        document.getElementById('resultArea').scrollIntoView({behavior: "smooth"});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // 下載 PDF (只抓取 reportCard)
     function downloadPDF() {
-        const element = document.getElementById('reportContent');
+        const element = document.getElementById('reportCard');
         const opt = {
             margin:       10,
-            filename:     'My_Retirement_Scorecard.pdf',
+            filename:     '退休準備度診斷報告.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2 },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        // 隱藏按鈕再截圖，避免截到按鈕
-        document.querySelector('.btn').style.display = 'none';
         
-        html2pdf().set(opt).from(element).save().then(() => {
-            // 恢復按鈕顯示
-            document.querySelector('.btn').style.display = 'block';
-        });
+        // 為了避免按鈕被下載，其實我們已經把 inputForm 隱藏了
+        // 只針對 reportCard 進行截圖，這樣最乾淨
+        html2pdf().set(opt).from(element).save();
     }
 
-    // 啟動
-    initQuestions();
+    init();
 </script>
 
 </body>
