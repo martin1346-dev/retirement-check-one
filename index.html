@@ -229,7 +229,71 @@
             purpose: {
                 low: "失去重力期：自我價值迷惘。請練習「不提職稱」介紹自己，列出10個興趣進行低成本試錯。",
                 mid: "探索定錨期：缺乏執行力。請設定具體的學習目標（如考證照），將興趣轉化為產出。",
-                high: "自我實現期：目標清晰。請即刻啟動圓夢大計畫，或透過寫作、演講分享人生
+                high: "自我實現期：目標清晰。請即刻啟動圓夢大計畫，或透過寫作、演講分享人生智慧。"
+            }
+        };
+        return logic[type][level];
+    }
+
+    function generateReport() {
+        let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            scores[input.dataset.cat] += parseInt(input.value);
+        });
+
+        let total = Object.values(scores).reduce((a,b)=>a+b, 0);
+        document.getElementById('finalTotal').innerText = total;
+
+        let tableHtml = '';
+        let actionHtml = '';
+        
+        for (let key in questions) {
+            let s = scores[key];
+            let status = s >= 20 ? "優良" : (s >= 11 ? "尚可" : "加油");
+            let color = s >= 20 ? "green" : (s >= 11 ? "#d39e00" : "#d9534f");
+            
+            tableHtml += `
+                <tr>
+                    <td>${questions[key].label}</td>
+                    <td style="font-weight:bold; font-size:1.2em;">${s}</td>
+                    <td style="color:${color}; font-weight:bold;">${status}</td>
+                </tr>`;
+
+            actionHtml += `
+                <div class="action-item">
+                    <div class="action-title">針對「${questions[key].label}」(${status}) 的建議：</div>
+                    <div class="action-text">${getAdvice(s, key)}</div>
+                </div>`;
+        }
+
+        document.getElementById('scoreTableBody').innerHTML = tableHtml;
+        document.getElementById('actionPlanList').innerHTML = actionHtml;
+
+        // 隱藏輸入區，顯示下載區
+        document.getElementById('mainContainer').style.display = 'none';
+        document.getElementById('downloadSection').style.display = 'block';
+    }
+
+    function downloadPDF() {
+        // 抓取 reportCard，這時候我們要在背景短暫顯示它以供截圖，但不需要讓使用者看到亂跑的版面
+        const element = document.getElementById('reportCard');
+        element.style.display = 'block'; // 必須顯示才能截圖
+
+        const opt = {
+            margin:       10, // 設定適中的邊距 (mm)
+            filename:     '退休準備度診斷報告.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            // 這裡不需要 pagebreak 設定，因為我們已經在 CSS 用 page-break-after/before 強制控制了
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.display = 'none'; // 下載完後再次隱藏
+        });
+    }
+
+    init();
 </script>
 
 </body>
