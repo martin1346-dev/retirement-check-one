@@ -8,7 +8,7 @@
     <style>
         :root {
             --primary-color: #0056b3;
-            --accent-color: #f1f3f5;
+            --accent-color: #f8f9fa;
             --bg-color: #f4f7f6;
         }
         body {
@@ -27,8 +27,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        h1 { color: var(--primary-color); text-align: center; margin-bottom: 30px;}
-        h2 { color: var(--primary-color); text-align: center; font-size: 1.5em;}
+        h1, h2, h3 { color: var(--primary-color); text-align: center; }
         
         /* 輸入區樣式 */
         .quadrant-box {
@@ -45,7 +44,7 @@
             padding-bottom: 5px;
             margin-bottom: 10px;
         }
-        .question-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; font-size: 0.95em; }
+        .question-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
         input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; }
         
         .btn {
@@ -63,47 +62,56 @@
         .btn:hover { background-color: #004494; }
         .btn-download { background-color: #28a745; display: none; margin-top: 15px; }
 
-        /* === PDF 報告專用區域 === */
+        /* === PDF 報告區 (初始隱藏) === */
         #reportCard {
-            display: none; /* 預設隱藏 */
+            display: none;
             background: white;
-            padding: 20px; /* 減少內距以節省空間 */
+            padding: 20px;
             border: 2px solid var(--primary-color);
             border-radius: 10px;
             margin-top: 20px;
         }
-        
-        /* 報告內的表格 (緊湊版) */
+
+        /* 第一頁：總結區 */
+        .summary-section {
+            margin-bottom: 30px;
+        }
+
+        /* 表格樣式 */
         .score-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 0.95em;
+            margin: 20px 0;
         }
         .score-table th, .score-table td {
             border: 1px solid #ccc;
-            padding: 8px; /* 縮小表格高度 */
+            padding: 12px;
             text-align: center;
         }
         .score-table th { background-color: var(--primary-color); color: white; }
-        
-        /* 報告內的行動建議 */
+
+        /* 第二頁：行動方案區 (強制換頁關鍵) */
+        .detail-section {
+            /* 這是強制換頁的 CSS 語法 */
+            page-break-before: always; 
+            margin-top: 20px;
+        }
+
         .action-item {
-            margin-bottom: 12px;
-            padding: 12px;
+            margin-bottom: 15px;
+            padding: 15px;
             background: var(--accent-color);
             border-left: 5px solid var(--primary-color);
             border-radius: 4px;
-            page-break-inside: avoid; /* 防止建議被切成兩半 */
         }
-        .action-title { font-weight: bold; color: #333; margin-bottom: 4px; font-size: 1em;}
-        .action-text { font-size: 0.9em; color: #555; text-align: justify;}
-        
+        .action-title { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .action-text { font-size: 0.95em; color: #555; text-align: justify; }
+
         .footer-note {
             text-align: center;
-            font-size: 0.75em;
+            font-size: 0.8em;
             color: #888;
-            margin-top: 20px;
+            margin-top: 30px;
             padding-top: 10px;
             border-top: 1px solid #eee;
         }
@@ -114,53 +122,61 @@
 <div class="container">
     <div id="inputForm">
         <h1>退休準備度檢測站</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">請滑動評分 (0分:不足 ~ 5分:充足)</p>
+        <p style="text-align: center; color: #666;">請滑動評分 (0分:不足 ~ 5分:充足)</p>
         <div id="quizContainer"></div>
         <button type="button" class="btn" onclick="generateReport()">查看診斷結果</button>
     </div>
 
     <div id="reportCard">
-        <h2 style="margin-top:0; margin-bottom: 10px;">全方位退休準備度診斷書</h2>
-        <div style="text-align: center; color: #666; font-size: 0.9em; margin-bottom: 15px;">
-            診斷日期：<span id="reportDate"></span>
+        
+        <div class="summary-section">
+            <h2 style="margin-top:0;">全方位退休準備度診斷書</h2>
+            <p style="text-align: center; color: #666;">診斷日期：<span id="reportDate"></span></p>
+
+            <div style="text-align: center; font-size: 1.8em; font-weight: bold; color: #d9534f; margin: 20px 0;">
+                總分：<span id="finalTotal">0</span> / 100
+            </div>
+
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th width="40%">檢測面向</th>
+                        <th width="30%">得分 (滿分25)</th>
+                        <th width="30%">狀態</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreTableBody"></tbody>
+            </table>
+            
+            <div style="text-align: center; margin-top: 50px; color: #888; font-style: italic;">
+                ( 下一頁：您的專屬行動方針 )
+            </div>
         </div>
 
-        <div style="text-align: center; font-size: 1.4em; font-weight: bold; color: #d9534f; margin-bottom: 15px;">
-            總分：<span id="finalTotal">0</span> / 100
+        <div class="detail-section" id="actionPlanSection">
+            <h3 style="border-bottom: 2px solid #ccc; padding-bottom: 10px; padding-top: 20px;">【專屬行動方針】</h3>
+            <div id="actionPlanList"></div>
+
+            <div class="footer-note">
+                本報告由 AI 輔助系統生成，建議預約您的 CFP 顧問進行深入解讀。
+            </div>
         </div>
 
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th width="40%">檢測面向</th>
-                    <th width="30%">得分 (滿分25)</th>
-                    <th width="30%">狀態</th>
-                </tr>
-            </thead>
-            <tbody id="scoreTableBody"></tbody>
-        </table>
-
-        <h3 style="border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 20px;">【專屬行動方針】</h3>
-        <div id="actionPlanList"></div>
-
-        <div class="footer-note">
-            本報告由 AI 輔助系統生成，建議預約您的 CFP 顧問進行深入解讀。
-        </div>
     </div>
 
-    <button id="downloadBtn" class="btn btn-download" onclick="downloadPDF()">📥 下載 PDF 報告</button>
+    <button id="downloadBtn" class="btn btn-download" onclick="downloadPDF()">📥 下載 PDF 報告 (兩頁式)</button>
     <button id="resetBtn" class="btn" style="background-color: #6c757d; display:none; margin-top:10px;" onclick="location.reload()">🔄 重新測驗</button>
-
 </div>
 
 <script>
+    // 題目資料庫
     const questions = {
-        finance: { label: "財務基站", items: ["被動收入覆蓋率", "緊急預備金", "醫療防禦係數", "負債歸零計畫", "資產配置多元性"] },
-        health: { label: "身心續航", items: ["BMI/體脂", "肌肉量與行動力", "規律運動", "睡眠品質", "家族病史預防"] },
-        social: { label: "社交漫遊", items: ["非職場朋友數", "跨代連結", "社群參與度", "親密關係帳戶", "緊急救援網"] },
-        purpose: { label: "第二人生", items: ["身份認同切換", "時間結構化", "心流體驗", "學習新技能", "圓夢執行力"] }
+        finance: ["被動收入覆蓋率 (0分<30% | 5分>100%)", "緊急預備金充足度 (0分<3個月 | 5分>6個月)", "醫療防禦係數 (0分 不足 | 5分 充足)", "負債歸零計畫 (0分 無計劃 | 5分 無負債)", "資產配置多元性 (0分 單一 | 5分 多元)"],
+        health: ["身體質量指數 (BMI) (0分 異常 | 5分 標準)", "肌肉量與行動力 (0分 衰退 | 5分 良好)", "規律運動習慣 (0分 不運動 | 5分 每週多於三次))", "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"],
+        social: ["非職場朋友數量 (0分 少於三人 | 5分 多於十人)", "跨代連結頻率 (0分 無 | 5分 頻繁)", "社群參與度 (0分 孤立 | 5分 積極投入)", "親密關係帳戶 (0分 疏遠 | 5分 緊密支持)", "緊急救援網 (0分 無建立 | 5分 隨時可求助)"],
+        purpose: ["身份認同切換 (0分 無法 | 5分 順利轉換)", "時間結構化能力 (0分 混亂 | 5分 井然有序)", "心流體驗頻率 (0分 無 | 5分 經常發生)", "學習新技能意願 (0分 無意願 | 5分 持續學習)", "圓夢執行力 (0分 拖延 | 5分 積極行動)"]
     };
-
+    
     function init() {
         const container = document.getElementById('quizContainer');
         for (let key in questions) {
@@ -253,22 +269,24 @@
     function downloadPDF() {
         const element = document.getElementById('reportCard');
         
-        // 設定 PDF 參數
         const opt = {
-            margin:       10, // 設定頁面邊距
+            margin:       10, 
             filename:     '退休準備度診斷報告.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true }, // 提高解析度
+            html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            // 關鍵：設定自動分頁，避免切斷文字
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            // 這裡設定：在 #actionPlanSection 這個 ID 之前，一定要換頁
+            pagebreak:    { mode: 'css', before: '#actionPlanSection' }
         };
         
-        // 執行轉換
         html2pdf().set(opt).from(element).save();
     }
 
     init();
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
