@@ -2,11 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>全方位退休準備度檢測 | 您的專屬CFP顧問 林馬丁製作</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         :root {
             --primary-color: #0056b3;
@@ -19,10 +18,7 @@
             color: #333;
             margin: 0;
             padding: 15px;
-            overflow-x: hidden;
         }
-
-        /* === 1. 用戶操作層 === */
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -31,40 +27,16 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             position: relative;
-            z-index: 10; /* 平常在 PDF 層上面 */
-            min-height: 80vh;
+            z-index: 10; /* 確保蓋在 PDF 層上面 */
+            min-height: 90vh; /* 確保高度足夠蓋住底下的層 */
         }
         
-        /* === 2. PDF 生成層 (關鍵修正) === */
-        #pdfHiddenLayer {
-            position: absolute; /* 不用 fixed，避免滾動問題 */
-            top: 0;
-            left: 0;
-            width: 794px;    /* A4 寬度 */
-            background: white;
-            z-index: -100;   /* 平常藏在最底層 */
-            opacity: 0;      /* 平常完全透明 */
-            pointer-events: none; /* 穿透點擊 */
-        }
-
-        /* === 3. 載入遮罩 (最高層級) === */
-        #loading {
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); /* 純黑背景，遮住底下的 PDF 運算過程 */
-            color: white; 
-            z-index: 20000; /* 最高層級 */
-            text-align: center; 
-            padding-top: 40vh;
-        }
-
-        /* === UI 樣式 === */
-        h1 { color: var(--primary-color); text-align: center; font-size: 1.5em; margin-bottom: 20px; }
+        /* === 輸入介面 === */
+        h1 { color: var(--primary-color); text-align: center; font-size: 1.5em; }
         .quadrant-box {
             background: #fafafa;
             border: 1px solid #ddd;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 15px;
             border-radius: 8px;
         }
@@ -72,17 +44,17 @@
             font-weight: bold;
             color: var(--primary-color);
             border-bottom: 2px solid #eee;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
-        .question-row { display: flex; flex-direction: column; margin-bottom: 15px; }
-        .question-label { font-size: 1em; margin-bottom: 8px; font-weight: 500; }
+        .question-row { display: flex; flex-direction: column; margin-bottom: 10px; } 
+        .question-label { font-size: 0.95em; margin-bottom: 5px; }
         .input-wrapper { display: flex; align-items: center; }
-        input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; height: 40px; }
+        input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; height: 30px; }
         
         @media(min-width: 600px) {
             .question-row { flex-direction: row; align-items: center; justify-content: space-between; }
-            .question-label { margin-bottom: 0; flex: 1; margin-right: 15px; }
+            .question-label { margin-bottom: 0; flex: 1; }
         }
 
         .btn {
@@ -93,19 +65,11 @@
         }
         .btn:hover { background-color: #004494; }
 
-        /* === 螢幕結果顯示區 === */
+        /* === 螢幕結果顯示區 (Web View) === */
         #webReportArea { display: none; }
         .web-score-card {
             background: var(--accent-color); padding: 20px; border-radius: 8px;
             text-align: center; margin-bottom: 20px;
-        }
-        /* Web 雷達圖容器 */
-        .chart-container-web {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 20px auto;
         }
         .web-advice-item {
             border-left: 5px solid var(--primary-color);
@@ -113,40 +77,65 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* === PDF 內頁排版 === */
+        /* Web 雷達圖容器 (RWD) */
+        .chart-container-web {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 20px auto;
+        }
+
+        /* === PDF 專用隱藏區 (Hidden A4 Layer) === */
+        /* 黃金架構核心：強制 A4 寬度，藏在最底層，平時隱藏 */
+        #pdfHiddenLayer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 794px; /* A4 標準寬度 */
+            z-index: -999; /* 藏在底下 */
+            visibility: hidden; /* 用戶看不見，但 html2canvas 抓得到 */
+            background: white;
+        }
+
         .pdf-page {
             width: 794px;
-            min-height: 1123px; /* A4 高度 */
-            padding: 40px 50px;
+            height: 1123px; /* A4 標準高度 */
+            padding: 40px;
             box-sizing: border-box;
             background: white;
             position: relative;
         }
-        
-        /* PDF 雷達圖容器 (固定尺寸) */
+
+        /* PDF 雷達圖容器 (固定尺寸，防止 Chart.js 在隱藏模式下算錯大小) */
         .chart-container-pdf {
             position: relative;
             width: 450px;
             height: 400px;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 10px auto;
         }
-
+        
         .pdf-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px; text-align: center; }
         .pdf-table th { background-color: var(--primary-color); color: white; }
 
-        .page-break { page-break-before: always; }
+        /* 載入遮罩 */
+        #loading {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); color: white; z-index: 9999;
+            text-align: center; padding-top: 40vh;
+        }
     </style>
 </head>
 <body>
 
 <div id="loading">
-    <div style="font-size:3em; margin-bottom:20px;">📄</div>
-    <div style="font-size:1.5em; font-weight:bold;">正在製作報告書</div>
-    <div style="margin-top:10px; color:#ccc;">確保畫面完整，請勿關閉視窗...</div>
+    <div style="font-size:2em;">📊</div>
+    正在製作 PDF 報告書...<br>
+    <span style="font-size:0.8em;">手機需時約 3-5 秒</span>
 </div>
 
 <div class="container">
+    
     <div id="inputForm">
         <h1>退休準備度檢測站</h1>
         <p style="text-align: center; color: #666;">請滑動評分 (0分:不足 ~ 5分:充足)</p>
@@ -169,8 +158,8 @@
 
         <div id="webAdviceList"></div>
 
-        <div style="text-align: center; margin-top: 30px; padding-bottom: 20px;">
-            <p style="color: #0056b3; font-weight:bold;">想保存詳細的 A4 報告嗎？</p>
+        <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #0056b3;">想保存詳細的 A4 報告嗎？</p>
             <button class="btn" style="background-color: #28a745;" onclick="downloadPDF()">📥 下載完整 PDF 報告</button>
             <button class="btn" style="background-color: #6c757d; margin-top: 10px;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
@@ -178,17 +167,18 @@
 </div>
 
 <div id="pdfHiddenLayer">
-    <div class="pdf-page">
+    
+    <div class="pdf-page" id="pdfPage1">
         <h2 style="text-align: center; color: #0056b3;">全方位退休準備度診斷書</h2>
         <p style="text-align: center; color: #666;">診斷日期：<span id="pdfDate"></span></p>
 
-        <div style="text-align: center; background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 10px 50px;">
+        <div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 30px 50px;">
             <div style="font-size: 1.2em; color: #555;">綜合評估得分</div>
-            <div style="font-size: 3.5em; font-weight: bold; color: #d9534f;">
+            <div style="font-size: 4em; font-weight: bold; color: #d9534f;">
                 <span id="pdfTotal">0</span> <span style="font-size: 0.4em; color:#888;">/ 100</span>
             </div>
         </div>
-        
+
         <div class="chart-container-pdf">
             <canvas id="pdfRadarChart"></canvas>
         </div>
@@ -204,25 +194,26 @@
             <tbody id="pdfTableBody"></tbody>
         </table>
         
-        <div style="position: absolute; bottom: 30px; width: 100%; text-align: center; color: #999;">- 第 1 頁 / 共 2 頁 -</div>
+        <div style="position: absolute; bottom: 40px; width: 100%; text-align: center; color: #999;">- 第 1 頁 / 共 2 頁 -</div>
     </div>
 
-    <div class="pdf-page page-break">
+    <div class="pdf-page" id="pdfPage2">
         <h3 style="color: #0056b3; border-bottom: 2px solid #ccc; padding-bottom: 10px;">【專屬行動方針】</h3>
         <div id="pdfAdviceList"></div>
 
-        <div style="position: absolute; bottom: 30px; width: 100%; text-align: center; color: #999;">
+        <div style="position: absolute; bottom: 40px; width: 100%; text-align: center; color: #999;">
             本報告由 AI 輔助系統生成，建議預約 CFP 顧問 林馬丁 進行深入解讀<br>- 第 2 頁 / 共 2 頁 -
         </div>
     </div>
 </div>
 
 <script>
+    // 嚴格還原：包含詳細評分標準的題目
     const questions = {
-        finance: { label: "財務基站", items: ["被動收入覆蓋率", "緊急預備金充足度", "醫療防禦係數", "負債歸零計畫", "資產配置多元性"] },
-        health: { label: "身心續航", items: ["身體質量指數 (BMI)", "肌肉量與行動力", "規律運動習慣", "睡眠品質", "家族病史追蹤"] },
-        social: { label: "社交漫遊", items: ["非職場朋友數量", "跨代連結頻率", "社群參與度", "親密關係帳戶", "緊急救援網"] },
-        purpose: { label: "第二人生", items: ["身份認同切換", "時間結構化能力", "心流體驗頻率", "學習新技能意願", "圓夢執行力"] }
+        finance: { label: "財務基站", items: ["被動收入覆蓋率 (0分<30% | 5分>100%)", "緊急預備金充足度 (0分<3個月 | 5分>6個月)", "醫療防禦係數 (0分 不足 | 5分 充足)", "負債歸零計畫 (0分 無計劃 | 5分 無負債)", "資產配置多元性 (0分 單一 | 5分 多元)"] },
+        health: { label: "身心續航", items: ["身體質量指數 (BMI) (0分 異常 | 5分 標準)", "肌肉量與行動力 (0分 衰退 | 5分 良好)", "規律運動習慣 (0分 不運動 | 5分 每週多於三次))", "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"] },
+        social: { label: "社交漫遊", items: ["非職場朋友數量 (0分 少於三人 | 5分 多於十人)", "跨代連結頻率 (0分 無 | 5分 頻繁)", "社群參與度 (0分 孤立 | 5分 積極投入)", "親密關係帳戶 (0分 疏遠 | 5分 緊密支持)", "緊急救援網 (0分 無建立 | 5分 隨時可求助)"] },
+        purpose: { label: "第二人生", items: ["身份認同切換 (0分 無法 | 5分 順利轉換)", "時間結構化能力 (0分 混亂 | 5分 井然有序)", "心流體驗頻率 (0分 無 | 5分 經常發生)", "學習新技能意願 (0分 無意願 | 5分 持續學習)", "圓夢執行力 (0分 拖延 | 5分 積極行動)"] }
     };
 
     let webChart = null;
@@ -277,15 +268,16 @@
         return logic[type][level];
     }
 
-    function drawChart(canvasId, data, isPdf) {
+    // 繪圖核心函數
+    function drawChart(canvasId, dataValues, isPdf) {
         const ctx = document.getElementById(canvasId).getContext('2d');
         return new Chart(ctx, {
             type: 'radar',
             data: {
                 labels: ['財務', '健康', '社交', '人生'],
                 datasets: [{
-                    label: '準備度',
-                    data: data,
+                    label: '得分',
+                    data: dataValues,
                     backgroundColor: 'rgba(0, 86, 179, 0.2)',
                     borderColor: '#0056b3',
                     borderWidth: 2,
@@ -296,12 +288,14 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                // PDF 版關閉動畫
+                // 關鍵：PDF版關閉動畫，確保截圖時畫面是完整的
                 animation: isPdf ? false : { duration: 1000 },
                 scales: {
                     r: {
-                        suggestedMin: 0, suggestedMax: 25,
-                        ticks: { stepSize: 5, display: !isPdf } 
+                        suggestedMin: 0,
+                        suggestedMax: 25,
+                        // PDF版不顯示刻度數字，讓畫面乾淨
+                        ticks: { stepSize: 5, display: !isPdf }
                     }
                 },
                 plugins: { legend: { display: false } }
@@ -330,14 +324,12 @@
             let color = s >= 20 ? "green" : (s >= 11 ? "#d39e00" : "#d9534f");
             let advice = getAdvice(s, key);
 
-            // Web View
             webAdviceHtml += `
                 <div class="web-advice-item">
                     <div style="font-weight:bold; color:#333;">${questions[key].label} <span style="color:${color}">(${s}分)</span></div>
                     <div style="font-size:0.95em; color:#666;">${advice}</div>
                 </div>`;
 
-            // PDF Table
             pdfTableHtml += `
                 <tr>
                     <td>${questions[key].label}</td>
@@ -345,7 +337,6 @@
                     <td style="color:${color}; font-weight:bold;">${status}</td>
                 </tr>`;
             
-            // PDF Advice
             pdfAdviceHtml += `
                 <div style="margin-bottom: 20px; padding: 15px; background: #fafafa; border-left: 5px solid ${color};">
                     <div style="font-weight:bold; margin-bottom:5px;">針對「${questions[key].label}」(${status}) 的建議：</div>
@@ -365,24 +356,25 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         const chartData = [scores.finance, scores.health, scores.social, scores.purpose];
+        
+        // 繪製 Web 版 (有動畫)
         webChart = drawChart('webRadarChart', chartData, false);
         
-        // PDF 版圖表在此刻繪製，因為 opacity:0，用戶看不到，但 DOM 已生成
+        // 繪製 PDF 版 (無動畫)
+        // 技巧：即便 visibility: hidden，只要 DOM 有固定寬高，Chart.js 就能畫
+        // 這樣可以確保下載時圖已經是好的
         pdfChart = drawChart('pdfRadarChart', chartData, true);
     }
 
     function downloadPDF() {
-        // 1. 開啟遮罩，擋住底下的「移花接木」操作
         document.getElementById('loading').style.display = 'block';
 
+        // 偵測裝置
         const isMobileOrTablet = (navigator.maxTouchPoints > 0) || (window.innerWidth < 1024);
         const element = document.getElementById('pdfHiddenLayer');
-
-        // 2. 關鍵時刻：將 PDF 層拉到最上層，並變成不透明
-        // 因為有 #loading (z-index: 20000) 蓋著，用戶還是只看到黑色 loading 畫面
-        // 但瀏覽器會因為 element 變成了 top-layer 而被迫繪製它 -> 解決空白問題
-        element.style.zIndex = "10000"; 
-        element.style.opacity = "1";
+        
+        // 黃金邏輯：暫時解除隱藏 (被白色container蓋住，使用者看不到，但程式看得到)
+        element.style.visibility = 'visible';
 
         const opt = {
             margin:       0,
@@ -392,28 +384,19 @@
                 scale: isMobileOrTablet ? 1.5 : 2, 
                 useCORS: true, 
                 scrollY: 0,
-                windowWidth: 794,
-                x: 0,
-                y: 0
+                windowWidth: 794 // 強制 A4 寬度
             },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 延遲 100ms 讓瀏覽器有時間 render 剛浮上來的 layer
-        setTimeout(() => {
-            html2pdf().set(opt).from(element).save().then(() => {
-                // 3. 還原：PDF 產生後，把 layer 踢回最底層並隱藏
-                element.style.zIndex = "-100";
-                element.style.opacity = "0";
-                document.getElementById('loading').style.display = 'none';
-            }).catch(err => {
-                console.error(err);
-                alert('PDF 生成失敗，請重試');
-                element.style.zIndex = "-100";
-                element.style.opacity = "0";
-                document.getElementById('loading').style.display = 'none';
-            });
-        }, 100);
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.visibility = 'hidden';
+            document.getElementById('loading').style.display = 'none';
+        }).catch(err => {
+            alert('PDF 生成失敗，請稍後再試');
+            element.style.visibility = 'hidden';
+            document.getElementById('loading').style.display = 'none';
+        });
     }
 
     init();
