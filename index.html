@@ -2,9 +2,11 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>全方位退休準備度檢測 | 您的專屬CFP顧問 林馬丁製作</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
             --primary-color: #0056b3;
@@ -16,19 +18,22 @@
             background-color: var(--bg-color);
             color: #333;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            overflow-x: hidden; /* 防止橫向溢出 */
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
             background: #ffffff;
-            padding: 30px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
         }
         
-        /* === 互動介面樣式 === */
-        h1 { color: var(--primary-color); text-align: center; }
+        /* === 輸入介面 === */
+        h1 { color: var(--primary-color); text-align: center; font-size: 1.5em; margin-bottom: 20px; }
         .quadrant-box {
             background: #fafafa;
             border: 1px solid #ddd;
@@ -40,152 +45,177 @@
             font-weight: bold;
             color: var(--primary-color);
             border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
         }
-        .question-row { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-        input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; }
+        /* 手機優化排列 */
+        .question-row { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .question-label { font-size: 1em; margin-bottom: 8px; font-weight: 500; }
+        .input-wrapper { display: flex; align-items: center; }
+        input[type="range"] { flex: 1; margin: 0 10px; cursor: pointer; height: 40px; } /* 加大觸控區 */
         
+        @media(min-width: 600px) {
+            .question-row { flex-direction: row; align-items: center; justify-content: space-between; }
+            .question-label { margin-bottom: 0; flex: 1; margin-right: 15px; }
+        }
+
         .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2em;
-            cursor: pointer;
-            margin-top: 20px;
+            display: block; width: 100%; padding: 15px;
+            background-color: var(--primary-color); color: white;
+            border: none; border-radius: 5px; font-size: 1.2em;
+            cursor: pointer; margin-top: 20px;
         }
         .btn:hover { background-color: #004494; }
 
-        /* === PDF 報告樣式 (關鍵修正區) === */
-        #reportCard {
-            display: none; /* 初始隱藏 */
+        /* === 螢幕結果顯示區 === */
+        #webReportArea { display: none; }
+        .web-score-card {
+            background: var(--accent-color); padding: 20px; border-radius: 8px;
+            text-align: center; margin-bottom: 20px;
+        }
+        
+        /* 雷達圖容器 (RWD) */
+        .chart-wrapper {
+            position: relative;
+            height: 300px; /* 手機上固定高度 */
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .web-advice-item {
+            border-left: 5px solid var(--primary-color);
+            background: #fff; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* === PDF 專用隱藏區 (絕對 A4 尺寸) === */
+        #pdfHiddenLayer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 794px; /* A4 寬 */
+            z-index: -999; 
+            visibility: hidden;
             background: white;
-            width: 100%;
-            /* 修正：移除多餘邊距，避免溢出 */
-            margin: 0; 
-            padding: 0;
         }
 
-        /* 第一頁：總結區 */
-        .page-one {
-            padding: 30px 40px;
-            background: #fff;
-            /* 修正：移除 page-break-after，避免與下一頁的 before 衝突 */
-            margin-bottom: 0;
+        .pdf-page {
+            width: 794px;
+            height: 1123px; /* A4 高 */
+            padding: 50px;
+            box-sizing: border-box;
+            background: white;
+            position: relative;
         }
-
-        /* 標題強制歸零，避免頂部留白 */
-        .page-one h2 { margin-top: 0; padding-top: 0; color: var(--primary-color); text-align: center; }
-
-        /* 第二頁：詳情區 */
-        .page-two {
-            padding: 30px 40px;
-            background: #fff;
-            /* 關鍵修正：只在這裡設定強制換頁，確保從新頁面開始 */
-            page-break-before: always; 
+        
+        /* PDF 雷達圖固定容器 */
+        .pdf-chart-container {
+            width: 500px;
+            height: 400px;
+            margin: 0 auto;
+            position: relative;
         }
+        
+        .pdf-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px; text-align: center; }
+        .pdf-table th { background-color: var(--primary-color); color: white; }
 
-        /* 表格樣式 */
-        .score-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .score-table th, .score-table td {
-            border: 1px solid #333;
-            padding: 10px;
-            text-align: center;
-        }
-        .score-table th { background-color: var(--primary-color); color: white; }
-
-        /* 行動建議卡 */
-        .action-item {
-            margin-bottom: 12px;
-            padding: 12px;
-            background: var(--accent-color);
-            border-left: 6px solid var(--primary-color);
-            border-radius: 4px;
-        }
-        .action-title { font-weight: bold; color: #333; margin-bottom: 4px; }
-        .action-text { font-size: 0.95em; color: #555; text-align: justify; line-height: 1.5; }
-
-        .footer-note {
-            text-align: center;
-            font-size: 0.8em;
-            color: #888;
-            margin-top: 30px;
+        /* 載入遮罩 */
+        #loading {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); color: white; z-index: 99999;
+            text-align: center; padding-top: 40vh;
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="mainWrapper">
-    
+<div id="loading">
+    <div style="font-size:2em; margin-bottom:10px;">📊</div>
+    正在繪製分析圖表並生成 PDF...<br>
+    <span style="font-size:0.8em; color:#ccc;">(平板/手機請稍候 3-5 秒)</span>
+</div>
+
+<div class="container">
     <div id="inputForm">
         <h1>退休準備度檢測站</h1>
-        <p style="text-align: center; color: #666;">請滑動評分 (0分:不足 ~ 5分:充足)</p>
+        <p style="text-align: center; color: #666;">請依現況評分 (0分:不足 ~ 5分:充足)</p>
         <div id="quizContainer"></div>
-        <button type="button" class="btn" onclick="generateReport()">查看診斷結果</button>
+        <button type="button" class="btn" onclick="showResults()">查看診斷結果</button>
     </div>
 
-    <div id="reportCard">
-        
-        <div class="page-one">
-            <h2>全方位退休準備度診斷書</h2>
-            <p style="text-align: center; color: #666; margin-bottom: 20px;">診斷日期：<span id="reportDate"></span></p>
-
-            <div style="text-align: center; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <div style="font-size: 1.1em; color: #555;">您的綜合評估得分</div>
-                <div style="font-size: 3em; font-weight: bold; color: #d9534f; line-height: 1.2;">
-                    <span id="finalTotal">0</span> <span style="font-size: 0.4em; color:#888;">/ 100</span>
-                </div>
-            </div>
-
-            <table class="score-table">
-                <thead>
-                    <tr>
-                        <th width="35%">檢測面向</th>
-                        <th width="25%">得分</th>
-                        <th width="40%">狀態評估</th>
-                    </tr>
-                </thead>
-                <tbody id="scoreTableBody"></tbody>
-            </table>
-            
-            <div class="footer-note" style="border:none; margin-top: 40px;">
-                ( 下一頁：您的專屬行動方針 )
+    <div id="webReportArea">
+        <h2>診斷結果總覽</h2>
+        <div class="web-score-card">
+            <div>綜合評估得分</div>
+            <div style="font-size: 3em; font-weight: bold; color: #d9534f;">
+                <span id="webTotal">0</span> / 100
             </div>
         </div>
 
-        <div class="page-two">
-            <h3 style="color: var(--primary-color); border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 0;">【專屬行動方針】</h3>
-            
-            <div id="actionPlanList"></div>
-
-            <div class="footer-note">
-                本報告由 AI 輔助系統生成<br>建議預約 CFP 顧問 林馬丁 進行深入解讀
-            </div>
+        <div class="chart-wrapper">
+            <canvas id="webRadarChart"></canvas>
         </div>
         
-        <div style="padding: 20px 40px; text-align: center;">
+        <div id="webAdviceList"></div>
+
+        <div style="text-align: center; margin-top: 30px; padding-bottom: 20px;">
+            <p style="color: #0056b3; font-weight:bold;">需要留存這份報告嗎？</p>
             <button class="btn" style="background-color: #28a745;" onclick="downloadPDF()">📥 下載完整 PDF 報告</button>
             <button class="btn" style="background-color: #6c757d; margin-top: 10px;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
+    </div>
+</div>
 
+<div id="pdfHiddenLayer">
+    <div class="pdf-page" id="pdfPage1">
+        <h2 style="text-align: center; color: #0056b3;">全方位退休準備度診斷書</h2>
+        <p style="text-align: center; color: #666;">診斷日期：<span id="pdfDate"></span></p>
+
+        <div style="text-align: center; background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 20px 50px;">
+            <div style="font-size: 1.2em; color: #555;">綜合評估得分</div>
+            <div style="font-size: 3em; font-weight: bold; color: #d9534f;">
+                <span id="pdfTotal">0</span> <span style="font-size: 0.4em; color:#888;">/ 100</span>
+            </div>
+        </div>
+
+        <div class="pdf-chart-container">
+            <canvas id="pdfRadarChart"></canvas>
+        </div>
+
+        <table class="pdf-table">
+            <thead>
+                <tr>
+                    <th width="40%">檢測面向</th>
+                    <th width="30%">得分</th>
+                    <th width="30%">狀態</th>
+                </tr>
+            </thead>
+            <tbody id="pdfTableBody"></tbody>
+        </table>
+        
+        <div style="position: absolute; bottom: 40px; width: 100%; text-align: center; color: #999;">- 第 1 頁 / 共 2 頁 -</div>
+    </div>
+
+    <div class="pdf-page" id="pdfPage2">
+        <h3 style="color: #0056b3; border-bottom: 2px solid #ccc; padding-bottom: 10px;">【專屬行動方針】</h3>
+        <div id="pdfAdviceList"></div>
+
+        <div style="position: absolute; bottom: 40px; width: 100%; text-align: center; color: #999;">
+            本報告由 AI 輔助系統生成，建議預約 CFP 顧問 林馬丁 進行深入解讀<br>- 第 2 頁 / 共 2 頁 -
+        </div>
     </div>
 </div>
 
 <script>
     const questions = {
-        finance: { label: "財務基站", items: ["被動收入覆蓋率 (0分<30% | 5分>100%)", "緊急預備金充足度 (0分<3個月 | 5分>6個月)", "醫療防禦係數 (0分 不足 | 5分 充足)", "負債歸零計畫 (0分 無計劃 | 5分 無負債)", "資產配置多元性 (0分 單一 | 5分 多元)"] },
-        health: { label: "身心續航", items: ["身體質量指數 (BMI) (0分 異常 | 5分 標準)", "肌肉量與行動力 (0分 衰退 | 5分 良好)", "規律運動習慣 (0分 不運動 | 5分 每週多於三次))", "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"] },
-        social: { label: "社交漫遊", items: ["非職場朋友數量 (0分 少於三人 | 5分 多於十人)", "跨代連結頻率 (0分 無 | 5分 頻繁)", "社群參與度 (0分 孤立 | 5分 積極投入)", "親密關係帳戶 (0分 疏遠 | 5分 緊密支持)", "緊急救援網 (0分 無建立 | 5分 隨時可求助)"] },
-        purpose: { label: "第二人生", items: ["身份認同切換 (0分 無法 | 5分 順利轉換)", "時間結構化能力 (0分 混亂 | 5分 井然有序)", "心流體驗頻率 (0分 無 | 5分 經常發生)", "學習新技能意願 (0分 無意願 | 5分 持續學習)", "圓夢執行力 (0分 拖延 | 5分 積極行動)"] }
+        finance: { label: "財務基站", items: ["被動收入覆蓋率", "緊急預備金充足度", "醫療防禦係數", "負債歸零計畫", "資產配置多元性"] },
+        health: { label: "身心續航", items: ["身體質量指數 (BMI)", "肌肉量與行動力", "規律運動習慣", "睡眠品質", "家族病史追蹤"] },
+        social: { label: "社交漫遊", items: ["非職場朋友數量", "跨代連結頻率", "社群參與度", "親密關係帳戶", "緊急救援網"] },
+        purpose: { label: "第二人生", items: ["身份認同切換", "時間結構化能力", "心流體驗頻率", "學習新技能意願", "圓夢執行力"] }
     };
+
+    let webChart = null;
+    let pdfChart = null;
 
     function init() {
         const container = document.getElementById('quizContainer');
@@ -196,15 +226,17 @@
             questions[key].items.forEach(item => {
                 html += `
                     <div class="question-row">
-                        <span style="flex:1">${item}</span>
-                        <input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.nextElementSibling.innerText = this.value">
-                        <span style="width:20px; text-align:center; font-weight:bold;">0</span>
+                        <div class="question-label">${item}</div>
+                        <div class="input-wrapper">
+                            <input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.parentElement.nextElementSibling.innerText = this.value">
+                            <span style="width:20px; text-align:center; font-weight:bold; margin-left:10px;">0</span>
+                        </div>
                     </div>`;
             });
             section.innerHTML = html;
             container.appendChild(section);
         }
-        document.getElementById('reportDate').innerText = new Date().toLocaleDateString();
+        document.getElementById('pdfDate').innerText = new Date().toLocaleDateString();
     }
 
     function getAdvice(score, type) {
@@ -234,69 +266,143 @@
         return logic[type][level];
     }
 
-    function generateReport() {
+    // 繪圖函數
+    function drawChart(canvasId, data, isPdf) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const config = {
+            type: 'radar',
+            data: {
+                labels: ['財務', '健康', '社交', '人生'],
+                datasets: [{
+                    label: '得分',
+                    data: data,
+                    backgroundColor: 'rgba(0, 86, 179, 0.2)',
+                    borderColor: '#0056b3',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#0056b3'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: isPdf ? false : { duration: 800 }, // PDF不開動畫
+                scales: {
+                    r: {
+                        suggestedMin: 0,
+                        suggestedMax: 25,
+                        ticks: { stepSize: 5, display: !isPdf } // PDF 版隱藏刻度數字比較乾淨
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        };
+        return new Chart(ctx, config);
+    }
+
+    function showResults() {
         let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
         document.querySelectorAll('input[type="range"]').forEach(input => {
             scores[input.dataset.cat] += parseInt(input.value);
         });
 
         let total = Object.values(scores).reduce((a,b)=>a+b, 0);
-        document.getElementById('finalTotal').innerText = total;
 
-        let tableHtml = '';
-        let actionHtml = '';
-        
+        // 填入數據
+        document.getElementById('webTotal').innerText = total;
+        document.getElementById('pdfTotal').innerText = total;
+
+        let webAdviceHtml = '';
+        let pdfTableHtml = '';
+        let pdfAdviceHtml = '';
+
         for (let key in questions) {
             let s = scores[key];
             let status = s >= 20 ? "優良" : (s >= 11 ? "尚可" : "加油");
             let color = s >= 20 ? "green" : (s >= 11 ? "#d39e00" : "#d9534f");
-            
-            tableHtml += `
+            let advice = getAdvice(s, key);
+
+            webAdviceHtml += `
+                <div class="web-advice-item">
+                    <div style="font-weight:bold; color:#333;">${questions[key].label} <span style="color:${color}">(${s}分)</span></div>
+                    <div style="font-size:0.95em; color:#666;">${advice}</div>
+                </div>`;
+
+            pdfTableHtml += `
                 <tr>
                     <td>${questions[key].label}</td>
                     <td style="font-weight:bold; font-size:1.2em;">${s}</td>
                     <td style="color:${color}; font-weight:bold;">${status}</td>
                 </tr>`;
-
-            actionHtml += `
-                <div class="action-item">
-                    <div class="action-title">針對「${questions[key].label}」(${status}) 的建議：</div>
-                    <div class="action-text">${getAdvice(s, key)}</div>
+            
+            pdfAdviceHtml += `
+                <div style="margin-bottom: 20px; padding: 15px; background: #fafafa; border-left: 5px solid ${color};">
+                    <div style="font-weight:bold; margin-bottom:5px;">針對「${questions[key].label}」(${status}) 的建議：</div>
+                    <div style="text-align:justify; line-height:1.5;">${advice}</div>
                 </div>`;
         }
 
-        document.getElementById('scoreTableBody').innerHTML = tableHtml;
-        document.getElementById('actionPlanList').innerHTML = actionHtml;
+        document.getElementById('webAdviceList').innerHTML = webAdviceHtml;
+        document.getElementById('pdfTableBody').innerHTML = pdfTableHtml;
+        document.getElementById('pdfAdviceList').innerHTML = pdfAdviceHtml;
 
-        // 修正：隱藏輸入區，直接顯示報告區 (包含兩頁內容與下載按鈕)
+        // 銷毀舊圖表
+        if(webChart) webChart.destroy();
+        if(pdfChart) pdfChart.destroy();
+
+        // 切換畫面
         document.getElementById('inputForm').style.display = 'none';
-        document.getElementById('reportCard').style.display = 'block';
-        
-        // 滾動到頂部以便閱讀
+        document.getElementById('webReportArea').style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // 繪製圖表
+        const chartData = [scores.finance, scores.health, scores.social, scores.purpose];
+        
+        // 1. Web Chart (有動畫)
+        webChart = drawChart('webRadarChart', chartData, false);
+        
+        // 2. PDF Chart (無動畫，針對隱藏層)
+        // 技巧：暫時讓它 visible 一瞬間以確保 Chart.js 抓得到尺寸
+        const pdfLayer = document.getElementById('pdfHiddenLayer');
+        pdfLayer.style.visibility = 'visible'; // 暫時顯示
+        pdfChart = drawChart('pdfRadarChart', chartData, true);
+        
+        // 為了不讓用戶看到背後的閃爍，我們用 setTimeout 快速藏回去，
+        // 但其實因為它在 z-index: -999，用戶本來就看不到，這裡只是保險
+        setTimeout(() => { pdfLayer.style.visibility = 'hidden'; }, 100);
     }
 
     function downloadPDF() {
-        // 這裡我們選擇只截取 "page-one" 和 "page-two" 的父容器，不包含下載按鈕
-        // 為了做到這點，我們動態創建一個臨時容器，或者利用 html2pdf 的選擇器
-        // 由於 reportCard 裡面現在包含了按鈕，我們需要稍微技巧性地排除按鈕，
-        // 最簡單的方法是：下載時暫時隱藏按鈕，下載完再顯示。
+        document.getElementById('loading').style.display = 'block';
         
-        const btns = document.querySelectorAll('#reportCard .btn');
-        btns.forEach(b => b.style.display = 'none'); // 暫時隱藏按鈕
+        // 核心修正：平板與手機偵測
+        // 只要是觸控裝置 (MaxTouchPoints > 0) 或 寬度小於 1024，都視為行動裝置
+        const isMobileOrTablet = (navigator.maxTouchPoints > 0) || (window.innerWidth < 1024);
+        
+        const element = document.getElementById('pdfHiddenLayer');
+        element.style.visibility = 'visible';
 
-        const element = document.getElementById('reportCard');
-        
         const opt = {
-            margin:       0, // 邊距歸零，完全交給 CSS 控制
+            margin:       0,
             filename:     '退休準備度診斷報告.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+            html2canvas:  { 
+                // 平板/手機一律用 1.5 倍，電腦用 2 倍
+                scale: isMobileOrTablet ? 1.5 : 2, 
+                useCORS: true, 
+                scrollY: 0,
+                windowWidth: 794 
+            },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        
+
         html2pdf().set(opt).from(element).save().then(() => {
-            btns.forEach(b => b.style.display = 'block'); // 恢復按鈕顯示
+            element.style.visibility = 'hidden';
+            document.getElementById('loading').style.display = 'none';
+        }).catch(err => {
+            console.error(err);
+            alert('生成失敗，建議使用 Chrome 瀏覽器');
+            element.style.visibility = 'hidden';
+            document.getElementById('loading').style.display = 'none';
         });
     }
 
