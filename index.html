@@ -3,125 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全方位退休準備度檢測 | 您的專屬CFP顧問 林馬丁製作</title>
+    <title>全方位退休準備度檢測 | CFP 國際理財顧問 林馬丁製作</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        :root { --primary-color: #0056b3; --accent-color: #f8f9fa; --bg-color: #f4f7f6; }
-        body { 
-            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; 
-            background-color: var(--bg-color); 
-            color: #333; 
-            margin: 0; 
-            padding: 20px; 
-            overflow-x: hidden; 
-        }
+        :root { --primary-color: #0056b3; --accent-color: #f8f9fa; --bg-color: #f4f7f6; --orange-brand: #e65100; }
+        body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; background-color: var(--bg-color); color: #333; margin: 0; padding: 20px; overflow-x: hidden; }
 
         /* === 1. 互動介面 (Web View) === */
-        #mobileAppLayer {
-            display: block;
-            max-width: 800px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
+        #mobileAppLayer { display: block; max-width: 800px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .app-box { border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .app-title { font-size: 1.2em; font-weight: bold; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; margin-bottom: 15px; }
+        .app-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1.2em; margin-top: 15px; cursor: pointer; transition: transform 0.1s; font-weight: bold; }
+        .app-btn:active { transform: scale(0.98); }
+        
+        .user-info-box { background: #e9f5ff; border: 2px solid #b8daff; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-weight: bold; margin-bottom: 5px; color: #0056b3; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
 
-        .app-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1.2em; margin-top: 25px; cursor: pointer; }
-        .app-box { background: #fafafa; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
-        .app-title { font-weight: bold; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 12px; font-size: 1.1em; }
-        .question-row { display: flex; flex-direction: column; margin-bottom: 12px; }
-        .input-wrapper { display: flex; align-items: center; margin-top: 5px; }
-        input[type="range"] { flex: 1; margin: 0 10px; height: 30px; }
-        @media(min-width: 600px) { 
-            .question-row { flex-direction: row; justify-content: space-between; align-items: center; }
-            .input-wrapper { margin-top: 0; width: 50%; }
-        }
-        .web-score-card { background: var(--accent-color); padding: 25px; text-align: center; border-radius: 10px; margin-bottom: 25px; }
-        .chart-box-web { position: relative; height: 300px; width: 100%; max-width: 500px; margin: 30px auto; }
+        .question-row { display: flex; flex-direction: column; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .input-wrapper { display: flex; align-items: center; margin-top: 8px; }
+        input[type="range"] { flex: 1; margin: 0 10px; height: 30px; cursor: pointer; }
+        @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; align-items: center; } .input-wrapper { margin-top: 0; width: 50%; } }
 
-        /* === 2. PDF 輸出介面 (Print View) === */
-        #pdfPrintLayer {
-            display: none; 
-            width: 794px; /* A4 寬度 */
-            min-width: 794px; 
-            margin: 0 auto; 
-            background: #ffffff; 
-            padding: 20px 0;
-            white-space: normal; 
-        }
-
-        .pdf-page {
-            width: 794px;
-            height: 1080px; 
-            padding: 50px 60px;
-            box-sizing: border-box;
-            background: white;
-            position: relative;
-            overflow: hidden; 
-            margin-bottom: 20px;
-            margin-left: auto;
-            margin-right: auto;
-            border: 1px solid #eee; 
-        }
-
-        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 14px; }
+        /* === 2. PDF 輸出介面 (隱藏層) === */
+        #pdfPrintLayer { display: none; width: 794px; min-width: 794px; margin: 0 auto; background: #ffffff; }
+        .pdf-page { width: 794px; height: 1080px; padding: 50px 60px; box-sizing: border-box; background: white; position: relative; overflow: hidden; border-bottom: 1px solid #eee; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 30px; }
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 12px; text-align: center; }
         .pdf-table th { background: var(--primary-color); color: white; }
-        .chart-box-pdf { position: relative; width: 600px; height: 500px; margin: 30px auto; display: block; }
+        .chart-box-pdf { position: relative; width: 600px; height: 500px; margin: 30px auto; }
         .page-footer { position: absolute; bottom: 40px; width: 100%; left: 0; text-align: center; color: #999; font-size: 12px; }
 
-        /* 下載相關元件 */
+        /* 元件控制 */
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); color: white; z-index: 200000; text-align: center; padding-top: 40vh; }
-        
-        #mobileDownloadModal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 200001; 
-            justify-content: center; align-items: center; 
-        }
+        #mobileDownloadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200001; justify-content: center; align-items: center; }
         .modal-box { background: white; width: 85%; max-width: 350px; padding: 25px; border-radius: 15px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="loadingOverlay">
-    <div style="font-size:3em; margin-bottom:15px;">⚙️</div>
-    <div style="font-size:1.2em; font-weight:bold;">報告生成中...</div>
-    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(系統將自動調整排版，請稍候)</div>
+    <div style="font-size:3em; margin-bottom:15px;">📊</div>
+    <div id="loadingText" style="font-size:1.2em; font-weight:bold;">正在分析數據...</div>
 </div>
 
 <div id="mobileDownloadModal">
     <div class="modal-box">
         <h2 style="margin-top:0; color:#333;">報告已完成！</h2>
-        <p style="color:#666; font-size:0.9em; line-height:1.5;">請點擊下方按鈕下載。</p>
-        <a id="blobDownloadLink" class="app-btn" style="margin-top:15px; text-decoration:none;" target="_blank" download="退休檢測報告.pdf">📥 下載 PDF</a>
-        <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; color:#999; text-decoration:underline; cursor:pointer;">關閉</button>
+        <p style="color:#666; font-size:0.9em;">請點擊下方按鈕儲存 PDF。</p>
+        <a id="blobDownloadLink" class="app-btn" style="text-decoration:none; background:#28a745;" target="_blank">📥 下載 PDF</a>
+        <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; color:#999; text-decoration:underline;">返回</button>
     </div>
 </div>
 
 <div id="mobileAppLayer">
     <div id="inputSection">
-        <h1 style="color:#0056b3; text-align:center;">退休準備度檢測站</h1>
-        <p style="text-align:center; color:#666;">請依現況評分 (0分:不足 ~ 5分:充足)</p>
+        <h1 style="color:var(--primary-color); text-align:center;">退休準備度檢測站</h1>
+        <div class="user-info-box">
+            <h3 style="margin-top:0; color:#0056b3;">📝 檢測者資料</h3>
+            <div class="form-group">
+                <label class="form-label">您的姓名：</label>
+                <input type="text" id="userName" class="form-input" placeholder="例如：林大明">
+            </div>
+            <div class="form-group">
+                <label class="form-label">聯絡電話 (選填)：</label>
+                <input type="tel" id="userPhone" class="form-input" placeholder="例如：0912-345-678">
+            </div>
+        </div>
+        <p style="text-align:center; color:#666; margin-bottom:20px;">請依現況評分 (0:極度不足 ~ 5:非常充足)</p>
         <div id="quizContainer"></div>
-        <button class="app-btn" onclick="showWebResults()">查看診斷結果</button>
+        <button class="app-btn" onclick="submitAndShowResults()">查看診斷結果</button>
     </div>
     
     <div id="resultSection" style="display:none;">
-        <h2 style="text-align:center; color:#0056b3;">診斷結果總覽</h2>
-        <div class="web-score-card">
-            <div style="font-size:1.1em; color:#555;">綜合評估得分</div>
-            <div style="font-size: 3.5em; font-weight: bold; color: #d9534f; line-height:1.2;" id="webTotal">0</div>
-        </div>
-        <div id="webAdviceList"></div>
-        <h3 style="text-align:center; color:#555; margin-top:40px;">【五力分析雷達圖】</h3>
-        <div class="chart-box-web"><canvas id="webRadarChart"></canvas></div>
+        <h2 style="text-align:center; color:var(--primary-color);">診斷結果總覽</h2>
+        <p id="welcomeUser" style="text-align:center; font-weight:bold;"></p>
         
-        <div style="text-align:center; margin-top:40px; margin-bottom:20px;">
-            <button class="app-btn" style="background:#28a745;" onclick="processPDF()">📥 產生 PDF 報告</button>
+        <div style="background: var(--accent-color); padding: 25px; text-align: center; border-radius: 10px; margin-bottom: 25px;">
+            <div style="font-size:1.1em; color:#555;">綜合評估得分</div>
+            <div style="font-size: 3.5em; font-weight: bold; color: #d9534f;" id="webTotal">0</div>
+        </div>
+
+        <div id="emailCaptureZone" style="background: linear-gradient(135deg, #fff5e6 0%, #fff 100%); border: 2px solid #ff9800; padding: 25px; border-radius: 15px; margin: 30px 0; box-shadow: 0 4px 12px rgba(255,152,0,0.15);">
+            <h3 style="margin-top:0; color:#e65100; font-size: 1.2em;">📩 領取客製化退休白皮書</h3>
+            <p style="font-size:0.9em; color:#5d4037; line-height:1.5;"><b>CFP 國際理財顧問 林馬丁</b> 將依據您的年齡，寄送專屬的《退休財務缺口檢查表》至您的信箱。</p>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:0.85em; color:#e65100; font-weight:bold; margin-bottom:5px;">您的年齡區段：</label>
+                <select id="userAge" class="form-input" style="border: 2px solid #ddd; background: #fff;">
+                    <option value="30-40">30-40 歲 (資產衝刺期)</option>
+                    <option value="41-50">41-50 歲 (黃金夾心期)</option>
+                    <option value="51-60">51-60 歲 (退休準備期)</option>
+                    <option value="61+">61 歲以上 (樂活享受期)</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <input type="email" id="userEmail" class="form-input" placeholder="您的電子信箱" style="flex:2; border: 2px solid #ddd;">
+                <button onclick="sendEmailReport()" id="emailBtn" style="flex:1; background:#e65100; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">立即發送</button>
+            </div>
+            <div id="emailStatus" style="font-size:0.85em; margin-top:10px; font-weight:bold; display:none;"></div>
+        </div>
+        
+        <div id="webAdviceList"></div>
+        <div class="chart-box-web" style="height:300px; margin:30px 0;"><canvas id="webRadarChart"></canvas></div>
+
+        <div style="text-align:center; margin-top:40px;">
+            <button class="app-btn" style="background:#28a745;" onclick="processPDF()">📥 下載 PDF 報告</button>
             <button class="app-btn" style="background:#6c757d; margin-top:15px;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
     </div>
@@ -129,80 +119,47 @@
 
 <div id="pdfPrintLayer">
     <div class="pdf-page">
-        <h2 style="text-align:center; color:#0056b3; margin-top:10px; font-size: 24px;">全方位退休準備度診斷書</h2>
-        <p style="text-align:right; color:#666; font-size: 12px;">診斷日期：<span id="pdfDate"></span></p>
-        <div style="text-align:center; background:#f8f9fa; padding:20px; margin:20px 50px; border-radius:15px;">
+        <h2 style="text-align:center; color:#0056b3; margin-top:10px; font-size: 26px;">全方位退休準備度診斷書</h2>
+        <p style="text-align:right; font-size: 12px; color:#666;">專業諮詢：CFP 國際理財顧問 林馬丁 | 日期：<span id="pdfDate"></span></p>
+        <p style="text-align:center; font-size:20px; font-weight:bold; margin-top:30px;">檢測者：<span id="pdfUserName"></span></p>
+        <div style="text-align:center; background:#f8f9fa; padding:30px; margin:40px 50px; border-radius:20px;">
             <div style="font-size:1.2em; color:#555;">綜合評估得分</div>
-            <div style="font-size:5em; font-weight:bold; color:#d9534f; line-height:1;" id="pdfTotal">0</div>
+            <div style="font-size:6em; font-weight:bold; color:#d9534f; line-height:1;" id="pdfTotal">0</div>
         </div>
-        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:50px; font-size: 18px;">第一部分：詳細得分</h3>
-        <table class="pdf-table"><thead><tr><th width="40%">檢測面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr></thead><tbody id="pdfTableBody"></tbody></table>
-        <div class="page-footer">- 第 1 頁 / 共 3 頁 -</div>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:60px;">第一部分：分項數據評估</h3>
+        <table class="pdf-table">
+            <thead><tr><th width="40%">檢測面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr></thead>
+            <tbody id="pdfTableBody"></tbody>
+        </table>
+        <div class="page-footer">- 第 1 頁 -</div>
     </div>
     <div class="pdf-page">
-        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 18px;">第二部分：專屬行動方針</h3>
-        <div id="pdfAdviceList" style="margin-top: 20px;"></div>
-        <div class="page-footer">- 第 2 頁 / 共 3 頁 -</div>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px;">第二部分：專屬行動方針</h3>
+        <div id="pdfAdviceList" style="margin-top: 30px;"></div>
+        <div class="page-footer">- 第 2 頁 -</div>
     </div>
     <div class="pdf-page">
-        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 18px;">第三部分：五力分析視覺化</h3>
-        <div style="text-align:center; margin-top: 30px; color:#666; font-size: 14px;">下圖展示了您在四大面向的平衡狀態</div>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px;">第三部分：五力均衡分析</h3>
         <div class="chart-box-pdf"><canvas id="pdfRadarChart"></canvas></div>
-        <div style="text-align:center; margin-top:60px; color:#555; font-size:12px; border: 1px solid #eee; padding: 15px; border-radius: 10px;">
-            <p><strong>本報告由「全方位退休準備度檢測系統」生成</strong></p>
-            <p>數據僅供參考，實際規劃建議預約 CFP 顧問 <strong>林馬丁</strong> 進行深度解讀。</p>
+        <div style="text-align:center; margin-top:80px; padding:20px; border:2px solid #eee; border-radius:15px; background:#fafafa;">
+            <p style="font-size:1.2em; color:#333; font-weight:bold; margin-bottom:10px;">💡 顧問貼心提醒</p>
+            <p style="color:#666; line-height:1.6;">數據僅能呈現現狀，財務自由需要時間與專業的精算。<br>本報告由 <b>CFP 國際理財顧問 林馬丁</b> 為您守護。</p>
         </div>
-        <div class="page-footer">- 第 3 頁 / 共 3 頁 -</div>
+        <div class="page-footer">- 第 3 頁 -</div>
     </div>
 </div>
 
 <script>
-    // [V53 修正]：資料已完全還原為包含評分標準的版本
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyT-p9PEm0y3axjz6oXvYFORBDSQxCqJq_4RrLYdXeko5JHyudkpPuRrSkHaTAwXNLD/exec';
+
     const questions = {
-        finance: { 
-            label: "財務基站", 
-            items: [
-                "被動收入覆蓋率 (0分<30% | 5分>100%)", 
-                "緊急預備金充足度 (0分<3個月 | 5分>6個月)", 
-                "醫療防禦係數 (0分 不足 | 5分 充足)", 
-                "負債歸零計畫 (0分 無計劃 | 5分 無負債)", 
-                "資產配置多元性 (0分 單一 | 5分 多元)"
-            ] 
-        },
-        health: { 
-            label: "身心續航", 
-            items: [
-                "身體質量指數 (BMI) (0分 異常 | 5分 標準)", 
-                "肌肉量與行動力 (0分 衰退 | 5分 良好)", 
-                "規律運動習慣 (0分 不運動 | 5分 每週多於三次)", 
-                "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", 
-                "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"
-            ] 
-        },
-        social: { 
-            label: "社交漫遊", 
-            items: [
-                "非職場朋友數量 (0分 少於三人 | 5分 多於十人)", 
-                "跨代連結頻率 (0分 無 | 5分 頻繁)", 
-                "社群參與度 (0分 孤立 | 5分 積極投入)", 
-                "親密關係帳戶 (0分 疏遠 | 5分 緊密支持)", 
-                "緊急救援網 (0分 無建立 | 5分 隨時可求助)"
-            ] 
-        },
-        purpose: { 
-            label: "第二人生", 
-            items: [
-                "身份認同切換 (0分 無法 | 5分 順利轉換)", 
-                "時間結構化能力 (0分 混亂 | 5分 井然有序)", 
-                "心流體驗頻率 (0分 無 | 5分 經常發生)", 
-                "學習新技能意願 (0分 無意願 | 5分 持續學習)", 
-                "圓夢執行力 (0分 拖延 | 5分 積極行動)"
-            ] 
-        }
+        finance: { label: "財務基站", items: ["被動收入覆蓋率", "緊急預備金充足度", "醫療防禦係數", "負債歸零計畫", "資產配置多元性"] },
+        health: { label: "身心續航", items: ["身體質量指數 (BMI)", "肌肉量與行動力", "規律運動習慣", "睡眠品質", "家族病史追蹤"] },
+        social: { label: "社交漫遊", items: ["非職場朋友數量", "跨代連結頻率", "社群參與度", "親密關係帳戶", "緊急救援網"] },
+        purpose: { label: "第二人生", items: ["身份認同切換", "時間結構化能力", "心流體驗頻率", "學習新技能意願", "圓夢執行力"] }
     };
 
-    let webChart = null, pdfChart = null;
-    let currentData = []; 
+    let webChart = null, pdfChart = null, currentData = [];
 
     function init() {
         const container = document.getElementById('quizContainer');
@@ -213,10 +170,10 @@
             questions[key].items.forEach(item => {
                 section.innerHTML += `
                     <div class="question-row">
-                        <span style="flex:1; font-size:0.95em;">${item}</span>
+                        <span style="font-size:0.95em;">${item}</span>
                         <div class="input-wrapper">
                             <input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.nextElementSibling.innerText = this.value">
-                            <span style="font-weight:bold; margin-left:10px; width:20px; text-align:center;">0</span>
+                            <span style="font-weight:bold; margin-left:10px; width:20px;">0</span>
                         </div>
                     </div>`;
             });
@@ -227,13 +184,91 @@
 
     function getAdvice(score, type) {
         const logic = {
-            finance: { low: "生存焦慮期：被動收入嚴重不足。建議優先執行債務雪球法，並強制存滿3個月緊急預備金。", mid: "資產累積期：資產抗通膨力脆弱。建議將被動收入覆蓋率目標設為70%，並補足醫療缺口。", high: "財富傳承期：財務自由。建議諮詢信託架構或稅務規劃，確保資產能依您的意願傳承。" },
-            health: { low: "健康崩壞期：退休最大隱憂。請立即預約健檢，並從「每天步行15分鐘」與減糖飲食開始。", mid: "亞健康調整期：肌力有流失風險。建議每週至少2次阻力訓練，並配戴裝置監控睡眠。", high: "樂活長壽期：體況極佳。建議持續挑戰需「腦體協調」的新運動（如網球、舞蹈）。" },
-            social: { low: "孤島效應期：生活圈封閉。建議每月主動聯繫一位老友，並強制自己參加一個實體興趣社團。", mid: "社交重組期：連結深度不足。建議挑選3位朋友建立深度聚會，並建立緊急互助聯絡網。", high: "社群樞紐期：人脈廣闊。建議進行社交斷捨離，將時間留給真正滋養心靈的深度關係。" },
-            purpose: { low: "失去重力期：自我價值迷惘。請練習「不提職稱」介紹自己，列出10個興趣進行低成本試錯。", mid: "探索定錨期：缺乏執行力。請設定具體的學習目標（如考證照），將興趣轉化為產出。", high: "自我實現期：目標清晰。請即刻啟動圓夢大計畫，或透過寫作、演講分享人生智慧。" }
+            finance: { low: "財務警報！被動收入嚴重不足，建議優先建立3-6個月緊急預備金並審視高利貸。", mid: "中產陷阱風險。建議強化資產抗通膨配置，並規劃退休後的現金流模型。", high: "財務穩健。建議進入資產傳承規劃期，優化稅務架構以達成跨代傳承。" },
+            health: { low: "健康隱憂。退休後醫療支出將激增，建議立即進行全面體檢並從低強度運動開始。", mid: "維持現況。肌力與體能有退化趨勢，建議加入阻力訓練以預防肌少症。", high: "活力充沛。建議維持高質量社交運動，並將健康管理經驗分享給家人。" },
+            social: { low: "孤獨風險高。職場外社交圈過窄，建議加入至少兩個非職業相關的興趣社團。", mid: "社交穩定。建議建立跨代的朋友圈，讓思考保持靈活並建立緊急互助群組。", high: "社交豐富。您是社群中的關鍵人物，建議精選優質關係，深度經營心靈伴侶。" },
+            purpose: { low: "價值迷惘。建議尋找第二曲線，列出三個您年輕時想做卻沒做的事並立即嘗試。", mid: "探索期。已經有初步目標，建議將興趣轉化為規律的計畫（如考取證照或創作）。", high: "生命力圓滿。目標清晰且具備執行力，建議啟動傳承計畫，影響更多生命。" }
         };
-        let level = score >= 20 ? 'high' : (score >= 11 ? 'mid' : 'low');
-        return logic[type][level];
+        return score >= 20 ? logic[type].high : (score >= 11 ? logic[type].mid : logic[type].low);
+    }
+
+    async function submitAndShowResults() {
+        const name = document.getElementById('userName').value.trim();
+        if (!name) { alert("請填寫姓名以利報告生成。"); return; }
+
+        document.getElementById('loadingOverlay').style.display = 'block';
+
+        let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
+        document.querySelectorAll('input[type="range"]').forEach(input => { scores[input.dataset.cat] += parseInt(input.value); });
+        currentData = [scores.finance, scores.health, scores.social, scores.purpose];
+        const total = currentData.reduce((a,b)=>a+b, 0);
+
+        // 背景傳送基本資料 (V56 原始邏輯)
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({ name, phone: document.getElementById('userPhone').value, ...scores, total }),
+            mode: 'no-cors'
+        }).catch(e => console.error(e));
+
+        document.getElementById('webTotal').innerText = total;
+        document.getElementById('pdfTotal').innerText = total;
+        document.getElementById('pdfUserName').innerText = name;
+        document.getElementById('welcomeUser').innerText = `你好，${name}！以下是您的深度診斷報告：`;
+
+        let adviceHtml = '', pdfTable = '', pdfAdvice = '';
+        for(let key in questions) {
+            let s = scores[key];
+            let color = s>=20?"#28a745":(s>=11?"#d39e00":"#d9534f");
+            let status = s>=20?"優良":(s>=11?"尚可":"需加強");
+            adviceHtml += `<div style="border-left:4px solid ${color}; padding:10px; margin-bottom:10px; background:#fff; font-size:0.9em;"><b>${questions[key].label}</b>: ${getAdvice(s, key)}</div>`;
+            pdfTable += `<tr><td>${questions[key].label}</td><td style="font-weight:bold;">${s}</td><td style="color:${color};font-weight:bold">${status}</td></tr>`;
+            pdfAdvice += `<div style="margin-bottom:15px; padding:15px; background:#f9f9f9; border-left:5px solid ${color}; font-size:14px;"><div style="font-weight:bold; margin-bottom:5px;">${questions[key].label} (${status})</div>${getAdvice(s, key)}</div>`;
+        }
+
+        document.getElementById('webAdviceList').innerHTML = adviceHtml;
+        document.getElementById('pdfTableBody').innerHTML = pdfTable;
+        document.getElementById('pdfAdviceList').innerHTML = pdfAdvice;
+
+        if(webChart) webChart.destroy();
+        webChart = createChart('webRadarChart', currentData, false);
+
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'block';
+            window.scrollTo(0,0);
+        }, 800);
+    }
+
+    // === V57.1: 專屬郵件自動化分流發送 ===
+    async function sendEmailReport() {
+        const email = document.getElementById('userEmail').value.trim();
+        const age = document.getElementById('userAge').value;
+        const name = document.getElementById('userName').value.trim();
+        const btn = document.getElementById('emailBtn');
+        const statusDiv = document.getElementById('emailStatus');
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            statusDiv.style.display = 'block'; statusDiv.style.color = '#d9534f'; statusDiv.innerText = "❌ 信箱格式不正確。"; return;
+        }
+
+        btn.disabled = true; btn.innerText = "傳送中...";
+        statusDiv.style.display = 'block'; statusDiv.style.color = '#0056b3'; statusDiv.innerText = "⏳ 正根據您的年齡調派專屬白皮書...";
+
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "send_email", name, email, age, scores: currentData, total: currentData.reduce((a,b)=>a+b,0) }),
+                mode: 'no-cors'
+            });
+            setTimeout(() => {
+                statusDiv.style.color = '#28a745';
+                statusDiv.innerText = "✅ 已預約發送！請至您的信箱查看《退休白皮書》。";
+                btn.innerText = "發送成功";
+            }, 1200);
+        } catch (e) {
+            btn.disabled = false; btn.innerText = "重新發送";
+        }
     }
 
     function createChart(canvasId, data, isPdf) {
@@ -242,147 +277,67 @@
             type: 'radar',
             data: {
                 labels: ['財務', '健康', '社交', '人生'],
-                datasets: [{ label: '得分', data: data, backgroundColor: 'rgba(0,86,179,0.2)', borderColor: '#0056b3', borderWidth: 2, pointBackgroundColor: '#0056b3', pointRadius: isPdf ? 3 : 4 }]
+                datasets: [{ data: data, backgroundColor: 'rgba(0,86,179,0.2)', borderColor: '#0056b3', borderWidth: 2, pointBackgroundColor: '#0056b3' }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 animation: isPdf ? false : { duration: 1000 },
-                scales: { r: { suggestedMin: 0, suggestedMax: 25, pointLabels: { font: { size: isPdf ? 14 : 12 } }, ticks: { display: !isPdf, stepSize: 5 } } },
+                scales: { r: { suggestedMin: 0, suggestedMax: 25, ticks: { display: false } } },
                 plugins: { legend: { display: false } }
             }
         });
     }
 
-    function showWebResults() {
-        let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
-        document.querySelectorAll('input[type="range"]').forEach(input => { scores[input.dataset.cat] += parseInt(input.value); });
-        currentData = [scores.finance, scores.health, scores.social, scores.purpose];
-        
-        const total = currentData.reduce((a,b)=>a+b, 0);
-        document.getElementById('webTotal').innerText = total;
-        document.getElementById('pdfTotal').innerText = total;
-
-        let adviceHtml = '', pdfTable = '', pdfAdvice = '';
-        for(let key in questions) {
-            let s = scores[key];
-            let color = s>=20?"green":(s>=11?"#d39e00":"#d9534f");
-            let status = s>=20?"優良":(s>=11?"尚可":"加油");
-            adviceHtml += `<div style="border-left:4px solid ${color}; padding:10px; margin-bottom:10px; background:#fff;"><b>${questions[key].label}</b>: ${getAdvice(s, key)}</div>`;
-            pdfTable += `<tr><td>${questions[key].label}</td><td style="font-weight:bold;">${s}</td><td style="color:${color};font-weight:bold">${status}</td></tr>`;
-            pdfAdvice += `<div class="pdf-text" style="margin-bottom:15px; padding:10px; background:#f9f9f9; border-left:4px solid ${color};"><div style="font-weight:bold; margin-bottom:5px;">${questions[key].label} (${status})</div>${getAdvice(s, key)}</div>`;
-        }
-
-        document.getElementById('webAdviceList').innerHTML = adviceHtml;
-        document.getElementById('pdfTableBody').innerHTML = pdfTable;
-        document.getElementById('pdfAdviceList').innerHTML = pdfAdvice;
-
-        document.getElementById('inputSection').style.display = 'none';
-        document.getElementById('resultSection').style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        if(webChart) webChart.destroy();
-        webChart = createChart('webRadarChart', currentData, false);
-    }
-
-    // === V52.0 統一視窗標準化 (Unified Viewport Standardization) ===
     async function processPDF() {
         document.getElementById('loadingOverlay').style.display = 'block';
-        window.scrollTo(0, 0); 
-
-        // 1. 備份
+        window.scrollTo(0, 0);
         const originalWidth = document.body.style.width;
-        const originalPadding = document.body.style.padding;
-
+        
         try {
-            // 2. [核心] 強制標準化視窗為 794px
-            // 解決電腦裁切 & 手機擠壓的唯一真理
             document.body.style.width = '794px';
-            document.body.style.padding = '0';
-            
-            // 3. 切換顯示
             document.getElementById('mobileAppLayer').style.display = 'none';
             document.getElementById('pdfPrintLayer').style.display = 'block';
 
-            // 4. 重繪圖表
             if(pdfChart) pdfChart.destroy();
-            await new Promise(r => setTimeout(r, 100)); 
+            await new Promise(r => setTimeout(r, 100));
             pdfChart = createChart('pdfRadarChart', currentData, true);
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 1000)); // 確保重繪
 
-            // 5. 設定截圖參數 (基於標準化後的寬度)
-            const fileName = `退休檢測報告_${Date.now()}.pdf`;
-            const element = document.getElementById('pdfPrintLayer');
             const opt = {
-                margin: 0,
-                filename: fileName,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    scrollY: 0, 
-                    windowWidth: 794,
-                    x: 0, y: 0 
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                enableLinks: false
+                margin: 0, filename: `退休報告_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // 6. 分流處理檔案傳輸
             const isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
             if (isPhone) {
-                // 手機：Web Share / 實體連結
-                const worker = html2pdf().set(opt).from(element);
-                const blob = await worker.output('blob');
-                const file = new File([blob], fileName, { type: "application/pdf" });
-
-                restoreUI(originalWidth, originalPadding);
-
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: '退休準備度報告',
-                            text: '這是您的全方位退休準備度診斷書。'
-                        });
-                    } catch (shareError) {}
+                const blob = await html2pdf().set(opt).from(document.getElementById('pdfPrintLayer')).output('blob');
+                const file = new File([blob], opt.filename, { type: "application/pdf" });
+                restoreUI(originalWidth);
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: '您的診斷報告' });
                 } else {
-                    const url = URL.createObjectURL(blob);
-                    document.getElementById('blobDownloadLink').href = url;
-                    document.getElementById('blobDownloadLink').download = fileName;
+                    document.getElementById('blobDownloadLink').href = URL.createObjectURL(blob);
                     document.getElementById('mobileDownloadModal').style.display = 'flex';
                 }
-
             } else {
-                // 電腦：直接下載
-                await html2pdf().set(opt).from(element).save();
-                restoreUI(originalWidth, originalPadding);
-                alert('下載成功！');
+                await html2pdf().set(opt).from(document.getElementById('pdfPrintLayer')).save();
+                restoreUI(originalWidth);
             }
-
         } catch (e) {
-            alert('製作失敗：' + e.message);
-            restoreUI(originalWidth, originalPadding);
+            alert('PDF 製作異常：' + e.message); restoreUI(originalWidth);
         }
     }
 
-    function closeModal() {
-        document.getElementById('mobileDownloadModal').style.display = 'none';
-    }
-
-    function restoreUI(width, padding) {
+    function restoreUI(width) {
         document.body.style.width = width || '';
-        document.body.style.padding = padding || '20px';
-        
         document.getElementById('pdfPrintLayer').style.display = 'none';
         document.getElementById('mobileAppLayer').style.display = 'block';
         document.getElementById('loadingOverlay').style.display = 'none';
-        
-        window.scrollTo(0, 0);
     }
 
+    function closeModal() { document.getElementById('mobileDownloadModal').style.display = 'none'; }
     init();
 </script>
-
 </body>
 </html>
