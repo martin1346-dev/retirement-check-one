@@ -26,13 +26,13 @@
         input[type="range"] { flex: 1; margin: 0 10px; }
         @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; } .input-wrapper { width: 45%; margin-top: 0; } }
 
-        /* === PDF 層：V56 經典設定 (預設隱藏) === */
+        /* === PDF 層 (預設隱藏) === */
+        /* 注意：這裡不設 margin: 0 auto，避免截圖時座標偏移 */
         #pdfPrintLayer { 
-            display: none; /* 平常隱藏 */
+            display: none; 
             width: 794px !important; 
             min-width: 794px !important; 
             background: white; 
-            margin: 0 auto;
         }
         .pdf-page { width: 794px; height: 1080px; padding: 50px 60px; box-sizing: border-box; background: white; position: relative; overflow: hidden; border-bottom: 1px solid #eee; }
         .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -47,7 +47,7 @@
 </head>
 <body>
 
-<div id="loadingOverlay">📊 <div style="margin-top:10px;">報告生成中，請稍候...</div></div>
+<div id="loadingOverlay">📊 <div style="margin-top:10px;">報告生成中...</div></div>
 
 <div id="mobileDownloadModal">
     <div style="background:white; padding:30px; border-radius:15px; text-align:center; width:80%;">
@@ -103,16 +103,13 @@
     <div class="pdf-page">
         <h2 style="text-align:center; color:#0056b3; font-size:32px; margin-top:30px;">退休準備度診斷書</h2>
         <p style="text-align:right; font-size:14px; margin-top:20px;">顧問：CFP 國際理財顧問 林馬丁 | <span id="pdfDate"></span></p>
-        
         <div style="text-align:center; margin-top:50px;">
             <p style="font-size:24px;">受測者：<span id="pdfUserName" style="font-weight:bold;"></span></p>
         </div>
-        
         <div style="text-align:center; background:#f8f9fa; padding:40px; margin:40px 60px; border-radius:20px; border:2px solid #eee;">
             <div style="font-size:1.5em; color:#555; margin-bottom:10px;">退休五力核心總分</div>
             <div style="font-size:7em; font-weight:bold; color:#d9534f; line-height:1;" id="pdfTotal">0</div>
         </div>
-        
         <div style="padding: 0 40px;">
             <table class="pdf-table">
                 <thead><tr><th width="40%">測評面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr></thead>
@@ -121,18 +118,14 @@
         </div>
         <div class="page-footer">- 第 1 頁：核心評分 -</div>
     </div>
-
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">專屬行動方針與建議</h3>
         <div id="pdfAdviceList" style="margin-top:30px;"></div>
         <div class="page-footer">- 第 2 頁：專業建議 -</div>
     </div>
-
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">五力分析圖譜</h3>
-        <div class="chart-box-pdf">
-            <canvas id="pdfRadarChart"></canvas>
-        </div>
+        <div class="chart-box-pdf"><canvas id="pdfRadarChart"></canvas></div>
         <div style="text-align:center; margin-top:100px; padding:30px; background:#f9f9f9; border-radius:15px;">
             <p style="font-size:18px; font-weight:bold; color:#333;">本報告由林馬丁退休精算系統生成</p>
             <p style="color:#666;">數據僅供參考，實際規劃請預約 CFP 顧問諮詢。</p>
@@ -142,10 +135,8 @@
 </div>
 
 <script>
-    // 您的 GAS 部署網址
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyT-p9PEm0y3axjz6oXvYFORBDSQxCqJq_4RrLYdXeko5JHyudkpPuRrSkHaTAwXNLD/exec';
     
-    // V56 文案與題目 (完整版)
     const questions = {
         finance: { label: "財務基站", items: ["被動收入覆蓋率 (0分<30% | 5分>100%)", "緊急預備金充足度 (0分<3個月 | 5分>6個月)", "醫療防禦係數 (0分 不足 | 5分 充足)", "負債歸零計畫 (0分 無計劃 | 5分 無負債)", "資產配置多元性 (0分 單一 | 5分 多元)"] },
         health: { label: "身心續航", items: ["身體質量指數 (BMI) (0分 異常 | 5分 標準)", "肌肉量與行動力 (0分 衰退 | 5分 良好)", "規律運動習慣 (0分 不運動 | 5分 每週多於三次)", "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"] },
@@ -214,7 +205,7 @@
         for(let key in questions) {
             let s = scores[key];
             let status = s>=20?"優良":(s>=11?"尚可":"加油");
-            adviceHtml += `<div style="border-left:5px solid #0056b3; padding:10px; margin-bottom:10px; background:#fff;"><b>${questions[key].label}</b>: ${getAdvice(s, key)}</div>`;
+            adviceHtml += `<div><b>${questions[key].label}</b>: ${getAdvice(s, key)}</div>`;
             pdfTable += `<tr><td>${questions[key].label}</td><td>${s}</td><td>${status}</td></tr>`;
             pdfAdvice += `<div style="margin-bottom:20px; font-size:16px;"><b>${questions[key].label} (${status})</b><br><span style="color:#555;">${getAdvice(s, key)}</span></div>`;
         }
@@ -237,18 +228,17 @@
         const pdfLayer = document.getElementById('pdfPrintLayer');
         
         try {
-            // === V56 復古大法：暴力切換 ===
-            // 1. 隱藏 App
+            // === V59 核心：強制靠左，移除置中 ===
             appLayer.style.display = 'none';
-            // 2. 顯示 PDF (佔滿畫面)
             pdfLayer.style.display = 'block';
-            document.body.style.backgroundColor = 'white'; 
             
-            // 3. 重繪圖表
+            // 關鍵修正：強制 Body 寬度，並確保沒有 margin
+            document.body.style.width = '794px';
+            document.body.style.backgroundColor = 'white';
+            document.body.style.margin = '0';
+            
             if(pdfChart) pdfChart.destroy();
             pdfChart = createChart('pdfRadarChart', currentData, true);
-            
-            // 4. 等待渲染 (這是關鍵，不能急)
             await new Promise(r => setTimeout(r, 1500)); 
 
             const opt = { 
@@ -259,9 +249,11 @@
                     scale: 2, 
                     useCORS: true, 
                     windowWidth: 794, 
-                    width: 794,
-                    scrollX: 0, 
-                    scrollY: 0 
+                    width: 794, 
+                    x: 0, 
+                    y: 0,
+                    scrollX: 0,
+                    scrollY: 0
                 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
             };
@@ -271,10 +263,7 @@
             if (isPhone) {
                 const blob = await html2pdf().set(opt).from(pdfLayer).output('blob');
                 const file = new File([blob], "退休報告.pdf", { type: "application/pdf" });
-                
-                // 復原畫面
                 restoreUI(originalWidth, appLayer, pdfLayer);
-
                 if (navigator.share) await navigator.share({ files: [file] });
                 else { 
                     document.getElementById('blobDownloadLink').href = URL.createObjectURL(blob);
@@ -295,9 +284,20 @@
         return new Chart(ctx, { type: 'radar', data: { labels: ['財務', '健康', '社交', '人生'], datasets: [{ data, backgroundColor: 'rgba(0,86,179,0.2)', borderColor: '#0056b3', borderWidth: 2 }] }, options: { animation: isPdf?false:{duration:1000}, scales: { r: { suggestedMin: 0, suggestedMax: 25, ticks: { display: false }, pointLabels: { font: { size: isPdf?18:12 } } } }, plugins: { legend: { display: false } } } });
     }
 
+    function sendEmailReport() {
+        const email = document.getElementById('userEmail').value;
+        const btn = document.getElementById('emailBtn');
+        if(!email.includes('@')) { alert("Email 格式有誤"); return; }
+        btn.disabled = true; btn.innerText = "...";
+        fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: 'no-cors', body: JSON.stringify({ action: "send_email", name: document.getElementById('userName').value, email, age: document.getElementById('userAge').value, total: currentData.reduce((a,b)=>a+b,0), finance: currentData[0], health: currentData[1], social: currentData[2], purpose: currentData[3] }) })
+        .then(() => { document.getElementById('emailStatus').innerText = "✅ 預約成功"; document.getElementById('emailStatus').style.display = "block"; })
+        .catch(() => { btn.disabled = false; });
+    }
+
     function restoreUI(width, appLayer, pdfLayer) {
         document.body.style.width = width || '';
         document.body.style.backgroundColor = 'var(--bg-color)';
+        document.body.style.margin = '0'; // 復原預設 margin
         pdfLayer.style.display = 'none';
         appLayer.style.display = 'block';
         document.getElementById('loadingOverlay').style.display = 'none';
