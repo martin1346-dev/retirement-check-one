@@ -15,16 +15,16 @@
         /* === 手機操作介面 === */
         #mobileAppLayer { display: block; max-width: 800px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-        /* === PDF 列印介面 (平常隱藏) === */
+        /* === PDF 列印介面 (隱藏處理) === */
         #pdfPrintLayer {
             display: none; 
-            width: 794px; /* A4 寬度 */
+            width: 794px; 
             margin: 0 auto; 
             background: #525659; 
             padding: 20px 0;
         }
 
-        /* PDF 單頁容器 (高度鎖定 1080px，防止電腦版空白頁) */
+        /* PDF 單頁容器 (高度鎖定，防止電腦版空白頁) */
         .pdf-page {
             width: 794px;
             height: 1080px; 
@@ -53,7 +53,6 @@
         .web-advice-item { border-left: 5px solid var(--primary-color); background: #fff; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .chart-box-web { position: relative; height: 300px; width: 100%; max-width: 500px; margin: 30px auto; }
         
-        /* PDF 專用大圖設定 */
         .chart-box-pdf { position: relative; width: 600px; height: 500px; margin: 40px auto; display: block; }
 
         .pdf-table { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 16px; }
@@ -63,39 +62,15 @@
         /* 遮罩 */
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); color: white; z-index: 100000; text-align: center; padding-top: 40vh; }
 
-        /* 手機下載彈窗 (原生風格) */
-        #mobileDownloadModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100001;
-            justify-content: center; align-items: center;
-        }
-        .modal-box { background: white; width: 85%; max-width: 350px; padding: 25px; border-radius: 15px; text-align: center; }
-        .dl-btn { 
-            display: block; width: 100%; padding: 15px; background: #28a745; color: white; 
-            text-decoration: none; font-size: 1.1em; border-radius: 8px; margin-top: 20px; font-weight: bold; 
-            box-sizing: border-box;
-        }
         .page-footer { position: absolute; bottom: 40px; width: 100%; left: 0; text-align: center; color: #999; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div id="loadingOverlay">
-    <div style="font-size:3em; margin-bottom:15px;">⚙️</div>
-    <div style="font-size:1.2em; font-weight:bold;">正在繪製報告...</div>
-    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(請稍候)</div>
-</div>
-
-<div id="mobileDownloadModal">
-    <div class="modal-box">
-        <h2 style="margin-top:0; color:#333;">報告已生成！</h2>
-        <p style="color:#666; font-size:0.9em; line-height:1.5;">
-            請點擊下方按鈕下載檔案。<br>
-            (若開啟為預覽，請使用「分享」>「儲存到檔案」)
-        </p>
-        <a id="blobDownloadLink" class="dl-btn" target="_blank">📥 點擊下載 PDF</a>
-        <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; color:#999; text-decoration:underline; cursor:pointer;">關閉視窗</button>
-    </div>
+    <div style="font-size:3em; margin-bottom:15px;">🚀</div>
+    <div style="font-size:1.2em; font-weight:bold;">報告製作中...</div>
+    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(手機版請稍候，將自動喚起分享選單)</div>
 </div>
 
 <div id="mobileAppLayer">
@@ -115,7 +90,7 @@
         <h3 style="text-align:center; color:#555; margin-top:40px;">【五力分析雷達圖】</h3>
         <div class="chart-box-web"><canvas id="webRadarChart"></canvas></div>
         <div style="text-align:center; margin-top:40px; margin-bottom:20px;">
-            <button class="btn" style="background:#28a745;" onclick="generatePDF()">📥 產生 PDF 報告</button>
+            <button class="btn" style="background:#28a745;" onclick="generatePDF()">📥 下載/分享 PDF 報告</button>
             <button class="btn" style="background:#6c757d; margin-top:10px;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
     </div>
@@ -141,10 +116,7 @@
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 20px;">第三部分：五力分析視覺化</h3>
         <div class="chart-box-pdf"><canvas id="pdfRadarChart"></canvas></div>
-        <div style="text-align:center; margin-top:80px; color:#555; font-size:14px; border: 2px solid #eee; padding: 20px; border-radius: 10px; line-height: 1.8;">
-            <p><strong>本報告由「全方位退休準備度檢測系統」生成</strong></p>
-            <p>數據僅供參考，實際規劃建議預約 CFP 顧問 <strong>林馬丁</strong> 進行深度解讀。</p>
-        </div>
+        <div style="text-align:center; margin-top:80px; color:#555; font-size:14px; border: 2px solid #eee; padding: 20px; border-radius: 10px; line-height: 1.8;"><p><strong>本報告由「全方位退休準備度檢測系統」生成</strong></p><p>數據僅供參考，實際規劃建議預約 CFP 顧問 <strong>林馬丁</strong> 進行深度解讀。</p></div>
         <div class="page-footer">- 第 3 頁 / 共 3 頁 -</div>
     </div>
 </div>
@@ -158,7 +130,6 @@
     };
 
     let webChart = null, pdfChart = null;
-    // 儲存分數以便重繪
     let currentData = [];
 
     function init() {
@@ -176,7 +147,6 @@
     }
 
     function getAdvice(score, type) {
-        // 簡化範例文字以節省篇幅，邏輯不變
         const logic = {
             finance: { low: "建議優先執行債務雪球法，並強制存滿3個月緊急預備金。", mid: "建議將被動收入覆蓋率目標設為70%，並補足醫療缺口。", high: "建議諮詢信託架構或稅務規劃，確保資產傳承。" },
             health: { low: "請立即預約健檢，並從「每天步行15分鐘」開始。", mid: "建議每週至少2次阻力訓練，並監控睡眠。", high: "建議持續挑戰需「腦體協調」的新運動。" },
@@ -209,7 +179,6 @@
         document.querySelectorAll('input[type="range"]').forEach(input => { scores[input.dataset.cat] += parseInt(input.value); });
         currentData = [scores.finance, scores.health, scores.social, scores.purpose];
         
-        // 填入 Web 與 PDF 數據
         const total = currentData.reduce((a,b)=>a+b, 0);
         document.getElementById('webTotal').innerText = total;
         document.getElementById('pdfTotal').innerText = total;
@@ -236,6 +205,7 @@
         webChart = createChart('webRadarChart', currentData, false);
     }
 
+    // === V41.0：雙軌制 + Web Share API ===
     async function generatePDF() {
         document.getElementById('loadingOverlay').style.display = 'block';
         window.scrollTo(0, 0);
@@ -244,22 +214,21 @@
         const originalPadding = document.body.style.padding;
         document.body.style.padding = '0';
 
-        // 2. 切換至 PDF 層 (確保有畫面可截)
+        // 2. 切換至 PDF 層 (確保有畫面)
         document.getElementById('mobileAppLayer').style.display = 'none';
         document.getElementById('pdfPrintLayer').style.display = 'block';
 
-        // 3. [關鍵] 強制重繪 PDF 圖表 (防止空白)
+        // 3. 重繪圖表
         if(pdfChart) pdfChart.destroy();
-        // 延遲確保 DOM 渲染
         await new Promise(r => setTimeout(r, 100)); 
         pdfChart = createChart('pdfRadarChart', currentData, true);
-        // 等待圖表畫完
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 800)); // 等待繪製
 
         // 4. 設定參數
         const isMobile = window.innerWidth < 800;
         const fileName = `退休檢測報告_${Date.now()}.pdf`;
         const element = document.getElementById('pdfPrintLayer');
+        
         const opt = {
             margin: 0, filename: fileName, image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: isMobile ? 1 : 2, useCORS: true, scrollY: 0, windowWidth: 794, x: 0, y: 0 },
@@ -269,36 +238,55 @@
 
         try {
             if (isMobile) {
-                // === 手機：轉 Blob -> 彈窗 ===
+                // === 手機策略：Web Share API (優先) 或 Blob 下載 (備案) ===
                 const worker = html2pdf().set(opt).from(element);
                 const blob = await worker.output('blob');
-                const url = URL.createObjectURL(blob);
-                
-                // 還原介面
+                const file = new File([blob], fileName, { type: "application/pdf" });
+
+                // 還原介面 (在分享選單跳出前還原，體驗較好)
                 restoreUI(originalPadding);
-                
-                // 設定彈窗連結
-                const link = document.getElementById('blobDownloadLink');
-                link.href = url;
-                link.download = fileName; // 嘗試給 Android 建議檔名
-                
-                // 顯示下載彈窗
-                document.getElementById('mobileDownloadModal').style.display = 'flex';
-                
+
+                // 策略 A: 嘗試使用原生分享 (iOS 15+, Android Chrome)
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: '退休準備度報告',
+                            text: '這是您的全方位退休準備度診斷書。'
+                        });
+                        // 分享成功
+                    } catch (shareError) {
+                        // 用戶取消分享，或分享失敗 -> 不做動作，或嘗試策略 B
+                        if (shareError.name !== 'AbortError') {
+                            fallbackDownload(blob, fileName);
+                        }
+                    }
+                } else {
+                    // 策略 B: 不支援分享，退回連結下載
+                    fallbackDownload(blob, fileName);
+                }
             } else {
-                // === 電腦：直接下載 ===
+                // === 電腦策略：直接下載 ===
                 await html2pdf().set(opt).from(element).save();
                 restoreUI(originalPadding);
                 alert('下載成功！');
             }
         } catch (e) {
-            alert('錯誤：' + e.message);
+            alert('發生錯誤：' + e.message);
             restoreUI(originalPadding);
         }
     }
 
-    function closeModal() {
-        document.getElementById('mobileDownloadModal').style.display = 'none';
+    function fallbackDownload(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        alert('已嘗試下載檔案，請查看您的下載清單。');
     }
 
     function restoreUI(padding) {
