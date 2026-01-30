@@ -19,9 +19,7 @@
             overflow-x: hidden; 
         }
 
-        /* =========================================
-           UI 層：手機/電腦 操作介面
-           ========================================= */
+        /* === 1. 互動介面 (Web View) === */
         #mobileAppLayer {
             display: block;
             max-width: 800px;
@@ -32,11 +30,9 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .app-h1 { color: var(--primary-color); text-align: center; margin-bottom: 20px; font-size: 1.8em; }
         .app-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1.2em; margin-top: 25px; cursor: pointer; }
         .app-box { background: #fafafa; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
         .app-title { font-weight: bold; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 12px; font-size: 1.1em; }
-        
         .question-row { display: flex; flex-direction: column; margin-bottom: 12px; }
         .input-wrapper { display: flex; align-items: center; margin-top: 5px; }
         input[type="range"] { flex: 1; margin: 0 10px; height: 30px; }
@@ -44,79 +40,74 @@
             .question-row { flex-direction: row; justify-content: space-between; align-items: center; }
             .input-wrapper { margin-top: 0; width: 50%; }
         }
-
         .web-score-card { background: var(--accent-color); padding: 25px; text-align: center; border-radius: 10px; margin-bottom: 25px; }
         .chart-box-web { position: relative; height: 300px; width: 100%; max-width: 500px; margin: 30px auto; }
 
-
-        /* =========================================
-           Print 層：A4 PDF 輸出專用
-           ========================================= */
+        /* === 2. PDF 輸出介面 (Print View) === */
         #pdfPrintLayer {
             display: none; 
-            width: 794px; 
+            width: 794px; /* A4 寬度 */
             min-width: 794px; 
-            /* 預設 margin: 0 auto 是為了預覽時置中好看 */
-            /* 但電腦版截圖時，我們會用 JS 暫時把它改成 margin: 0 */
+            /* 關鍵：雖然這裡寫 margin auto，但在 JS 生成時我們會強制覆蓋掉它 */
             margin: 0 auto; 
-            background: #525659; 
+            background: #ffffff; 
             padding: 20px 0;
             white-space: normal; 
         }
 
-        /* PDF 單頁容器 */
         .pdf-page {
             width: 794px;
-            height: 1080px; /* 鎖死高度，防止電腦版溢出空白頁 */
+            height: 1080px; /* 固定高度 */
             padding: 50px 60px;
             box-sizing: border-box;
             background: white;
             position: relative;
             overflow: hidden; 
             margin-bottom: 20px;
-            /* 確保頁面內容置中 */
+            /* 內容置中 */
             margin-left: auto;
             margin-right: auto;
+            border: 1px solid #eee; 
         }
 
-        .pdf-h2 { text-align: center; color: #0056b3; margin-top: 10px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .pdf-h3 { color: #0056b3; border-left: 6px solid #0056b3; padding-left: 12px; margin-top: 40px; font-size: 18px; margin-bottom: 20px; }
-        .pdf-text { font-size: 14px; line-height: 1.6; color: #333; }
-        
         .pdf-table { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 14px; }
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 12px; text-align: center; }
         .pdf-table th { background: var(--primary-color); color: white; }
-
         .chart-box-pdf { position: relative; width: 600px; height: 500px; margin: 30px auto; display: block; }
         .page-footer { position: absolute; bottom: 40px; width: 100%; left: 0; text-align: center; color: #999; font-size: 12px; }
 
-        /* 遮罩與彈窗 */
-        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); color: white; z-index: 100000; text-align: center; padding-top: 40vh; }
-        #mobileDownloadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100001; justify-content: center; align-items: center; }
+        /* 下載相關元件 */
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); color: white; z-index: 200000; text-align: center; padding-top: 40vh; }
+        
+        #mobileDownloadModal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 200001; 
+            justify-content: center; align-items: center; 
+        }
         .modal-box { background: white; width: 85%; max-width: 350px; padding: 25px; border-radius: 15px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="loadingOverlay">
-    <div style="font-size:3em; margin-bottom:15px;">📊</div>
-    <div style="font-size:1.2em; font-weight:bold;">報告製作中...</div>
-    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(系統將自動調整排版)</div>
+    <div style="font-size:3em; margin-bottom:15px;">⚙️</div>
+    <div style="font-size:1.2em; font-weight:bold;">報告生成中...</div>
+    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(系統將自動調整排版，請稍候)</div>
 </div>
 
 <div id="mobileDownloadModal">
     <div class="modal-box">
         <h2 style="margin-top:0; color:#333;">報告已完成！</h2>
-        <p style="color:#666; font-size:0.9em; line-height:1.5;">請點擊下方按鈕下載檔案。</p>
-        <a id="blobDownloadLink" class="app-btn" style="margin-top:15px; text-decoration:none;" target="_blank">📥 下載 PDF</a>
+        <p style="color:#666; font-size:0.9em; line-height:1.5;">請點擊下方按鈕下載。</p>
+        <a id="blobDownloadLink" class="app-btn" style="margin-top:15px; text-decoration:none;" target="_blank" download="退休檢測報告.pdf">📥 下載 PDF</a>
         <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; color:#999; text-decoration:underline; cursor:pointer;">關閉</button>
     </div>
 </div>
 
 <div id="mobileAppLayer">
     <div id="inputSection">
-        <h1 class="app-h1">退休準備度檢測站</h1>
-        <p style="text-align:center; color:#666; margin-bottom:20px;">請依現況評分 (0分:不足 ~ 5分:充足)</p>
+        <h1 style="color:#0056b3; text-align:center;">退休準備度檢測站</h1>
+        <p style="text-align:center; color:#666;">請依現況評分 (0分:不足 ~ 5分:充足)</p>
         <div id="quizContainer"></div>
         <button class="app-btn" onclick="showWebResults()">查看診斷結果</button>
     </div>
@@ -132,7 +123,7 @@
         <div class="chart-box-web"><canvas id="webRadarChart"></canvas></div>
         
         <div style="text-align:center; margin-top:40px; margin-bottom:20px;">
-            <button class="app-btn" style="background:#28a745;" onclick="startPDFProcess()">📥 產生 PDF 報告</button>
+            <button class="app-btn" style="background:#28a745;" onclick="processPDF()">📥 產生 PDF 報告</button>
             <button class="app-btn" style="background:#6c757d; margin-top:15px;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
     </div>
@@ -140,26 +131,23 @@
 
 <div id="pdfPrintLayer">
     <div class="pdf-page">
-        <h2 class="pdf-h2">全方位退休準備度診斷書</h2>
+        <h2 style="text-align:center; color:#0056b3; margin-top:10px; font-size: 24px;">全方位退休準備度診斷書</h2>
         <p style="text-align:right; color:#666; font-size: 12px;">診斷日期：<span id="pdfDate"></span></p>
         <div style="text-align:center; background:#f8f9fa; padding:20px; margin:20px 50px; border-radius:15px;">
             <div style="font-size:1.2em; color:#555;">綜合評估得分</div>
             <div style="font-size:5em; font-weight:bold; color:#d9534f; line-height:1;" id="pdfTotal">0</div>
         </div>
-        <h3 class="pdf-h3">第一部分：詳細得分</h3>
-        <table class="pdf-table">
-            <thead><tr><th width="40%">檢測面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr></thead>
-            <tbody id="pdfTableBody"></tbody>
-        </table>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:50px; font-size: 18px;">第一部分：詳細得分</h3>
+        <table class="pdf-table"><thead><tr><th width="40%">檢測面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr></thead><tbody id="pdfTableBody"></tbody></table>
         <div class="page-footer">- 第 1 頁 / 共 3 頁 -</div>
     </div>
     <div class="pdf-page">
-        <h3 class="pdf-h3">第二部分：專屬行動方針</h3>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 18px;">第二部分：專屬行動方針</h3>
         <div id="pdfAdviceList" style="margin-top: 20px;"></div>
         <div class="page-footer">- 第 2 頁 / 共 3 頁 -</div>
     </div>
     <div class="pdf-page">
-        <h3 class="pdf-h3">第三部分：五力分析視覺化</h3>
+        <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 18px;">第三部分：五力分析視覺化</h3>
         <div style="text-align:center; margin-top: 30px; color:#666; font-size: 14px;">下圖展示了您在四大面向的平衡狀態</div>
         <div class="chart-box-pdf"><canvas id="pdfRadarChart"></canvas></div>
         <div style="text-align:center; margin-top:60px; color:#555; font-size:12px; border: 1px solid #eee; padding: 15px; border-radius: 10px;">
@@ -261,136 +249,96 @@
         webChart = createChart('webRadarChart', currentData, false);
     }
 
-    // === V47 核心入口：分流處理 ===
-    async function startPDFProcess() {
-        // userAgent 判斷最準確
-        const isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        if (isPhone) {
-            await handleMobile();
-        } else {
-            await handlePC();
-        }
-    }
+    // === V52.0 最終版核心：統一視窗標準化 (Standardized Viewport) ===
+    async function processPDF() {
+        // 1. 準備階段
+        document.getElementById('loadingOverlay').style.display = 'block';
+        // [關鍵] 強制滾動到 (0,0)，這是截圖準確的第一步
+        window.scrollTo(0, 0); 
 
-    // === [電腦版] 獨立處理邏輯 ===
-    async function handlePC() {
+        // 2. 備份 Body 原始樣式
+        const originalWidth = document.body.style.width;
+        const originalPadding = document.body.style.padding;
+        const originalMargin = document.body.style.margin;
+
         try {
-            document.getElementById('loadingOverlay').style.display = 'block';
-            window.scrollTo(0, 0);
-
-            // 1. 切換顯示
+            // 3. [核心修正] 強制鎖定視窗寬度為 794px
+            // 無論是寬螢幕電腦還是窄螢幕手機，此刻通通變成標準 A4 寬度
+            // 這解決了電腦版裁切 (不再有留白) 和 手機版擠壓 (強制展開)
+            document.body.style.width = '794px';
+            document.body.style.padding = '0';
+            document.body.style.margin = '0'; // 確保靠左對齊
+            
+            // 4. 切換顯示
             document.getElementById('mobileAppLayer').style.display = 'none';
             const pdfLayer = document.getElementById('pdfPrintLayer');
             pdfLayer.style.display = 'block';
-
-            // 2. [關鍵修正]：電腦版強制「釘」在左上角 (0,0)
-            // 這樣可以消除 margin: 0 auto 造成的截圖偏移
-            pdfLayer.style.position = 'absolute';
-            pdfLayer.style.left = '0';
-            pdfLayer.style.top = '0';
+            // 確保 PDF 層也沒有 margin
             pdfLayer.style.margin = '0';
-            document.body.style.padding = '0';
 
-            // 3. 繪製圖表
+            // 5. 重繪圖表 (確保可見)
             if(pdfChart) pdfChart.destroy();
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 100)); 
             pdfChart = createChart('pdfRadarChart', currentData, true);
+            // 等待渲染緩衝
             await new Promise(r => setTimeout(r, 800));
 
-            // 4. 下載
-            const element = document.getElementById('pdfPrintLayer');
-            const opt = {
-                margin: 0,
-                filename: `退休檢測報告_${Date.now()}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 794, x: 0, y: 0 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                enableLinks: false
-            };
-
-            await html2pdf().set(opt).from(element).save();
-            alert('下載成功！');
-
-        } catch (e) {
-            alert('電腦版下載失敗：' + e.message);
-        } finally {
-            // 5. [關鍵]：徹底還原 CSS，避免介面壞掉
-            const pdfLayer = document.getElementById('pdfPrintLayer');
-            pdfLayer.style.display = 'none';
-            pdfLayer.style.position = ''; // 清除 absolute
-            pdfLayer.style.left = '';
-            pdfLayer.style.top = '';
-            pdfLayer.style.margin = '0 auto'; // 恢復置中
-
-            document.body.style.padding = '20px';
-            document.getElementById('mobileAppLayer').style.display = 'block';
-            document.getElementById('loadingOverlay').style.display = 'none';
-            window.scrollTo(0, 0);
-        }
-    }
-
-    // === [手機版] 獨立處理邏輯 ===
-    async function handleMobile() {
-        // 備份原始寬度
-        const originalWidth = document.body.style.width;
-        
-        try {
-            document.getElementById('loadingOverlay').style.display = 'block';
-            window.scrollTo(0, 0);
-
-            // 1. [關鍵]：強制撐大 Body
-            document.body.style.width = '794px'; 
-            document.body.style.padding = '0';
-
-            // 2. 切換顯示
-            document.getElementById('mobileAppLayer').style.display = 'none';
-            document.getElementById('pdfPrintLayer').style.display = 'block';
-
-            // 3. 繪製圖表
-            if(pdfChart) pdfChart.destroy();
-            await new Promise(r => setTimeout(r, 100));
-            pdfChart = createChart('pdfRadarChart', currentData, true);
-            await new Promise(r => setTimeout(r, 800));
-
-            // 4. 準備檔案
+            // 6. 設定截圖參數
             const fileName = `退休檢測報告_${Date.now()}.pdf`;
-            const element = document.getElementById('pdfPrintLayer');
             const opt = {
                 margin: 0,
                 filename: fileName,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 794 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    scrollY: 0, 
+                    windowWidth: 794, // 配合 body 寬度
+                    x: 0, y: 0 // 從絕對零點開始抓
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 enableLinks: false
             };
 
-            const worker = html2pdf().set(opt).from(element);
-            const blob = await worker.output('blob');
-            const file = new File([blob], fileName, { type: "application/pdf" });
+            // 7. 執行生成
+            const isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isPhone) {
+                // 手機版：Web Share / Blob Link
+                const worker = html2pdf().set(opt).from(pdfLayer);
+                const blob = await worker.output('blob');
+                const file = new File([blob], fileName, { type: "application/pdf" });
 
-            // 5. 先還原介面 (讓使用者覺得處理好了)
-            restoreUIMobile(originalWidth);
+                // 生成完畢，先還原介面
+                restoreUI(originalWidth, originalPadding, originalMargin);
 
-            // 6. 分享或下載
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: '退休準備度報告',
-                        text: '這是您的全方位退休準備度診斷書。'
-                    });
-                } catch (shareError) {}
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: '退休準備度報告',
+                            text: '這是您的全方位退休準備度診斷書。'
+                        });
+                    } catch (shareError) {}
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('blobDownloadLink').href = url;
+                    document.getElementById('blobDownloadLink').download = fileName;
+                    document.getElementById('mobileDownloadModal').style.display = 'flex';
+                }
+
             } else {
-                const url = URL.createObjectURL(blob);
-                document.getElementById('blobDownloadLink').href = url;
-                document.getElementById('blobDownloadLink').download = fileName;
-                document.getElementById('mobileDownloadModal').style.display = 'flex';
+                // 電腦版：直接下載
+                await html2pdf().set(opt).from(pdfLayer).save();
+                
+                // 還原介面
+                restoreUI(originalWidth, originalPadding, originalMargin);
+                alert('下載成功！');
             }
 
         } catch (e) {
-            alert('手機版下載失敗：' + e.message);
-            restoreUIMobile(originalWidth);
+            alert('製作失敗：' + e.message);
+            restoreUI(originalWidth, originalPadding, originalMargin);
         }
     }
 
@@ -398,13 +346,19 @@
         document.getElementById('mobileDownloadModal').style.display = 'none';
     }
 
-    function restoreUIMobile(originalWidth) {
-        document.body.style.width = originalWidth || ''; // 還原
-        document.body.style.padding = '20px';
+    function restoreUI(width, padding, margin) {
+        // 還原所有強制樣式
+        document.body.style.width = width || '';
+        document.body.style.padding = padding || '20px';
+        document.body.style.margin = margin || '';
         
-        document.getElementById('pdfPrintLayer').style.display = 'none';
+        const pdfLayer = document.getElementById('pdfPrintLayer');
+        pdfLayer.style.display = 'none';
+        pdfLayer.style.margin = '0 auto'; // 還原預覽置中
+        
         document.getElementById('mobileAppLayer').style.display = 'block';
         document.getElementById('loadingOverlay').style.display = 'none';
+        
         window.scrollTo(0, 0);
     }
 
