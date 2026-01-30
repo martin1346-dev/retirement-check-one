@@ -9,14 +9,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        :root { --primary-color: #0056b3; --accent-color: #f8f9fa; --bg-color: #f4f7f6; }
+        :root { --primary-color: #0056b3; --accent-color: #f8f9fa; --bg-color: #f4f7f6; --cta-color: #ffc107; }
         body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; overflow-x: hidden; }
 
         /* Web UI */
         #mobileAppLayer { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .app-box { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .app-title { font-size: 1.2em; font-weight: bold; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; margin-bottom: 15px; }
-        .app-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1.1em; margin-top: 15px; cursor: pointer; font-weight: bold; text-align: center; }
+        .app-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1.1em; margin-top: 15px; cursor: pointer; font-weight: bold; text-align: center; text-decoration: none; }
         .user-info-box { background: #e9f5ff; border: 1px solid #b8daff; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .form-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; margin-top: 5px; box-sizing: border-box; }
         
@@ -26,8 +26,28 @@
         input[type="range"] { flex: 1; margin: 0 10px; }
         @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; } .input-wrapper { width: 45%; margin-top: 0; } }
 
+        /* === 預約顧問區塊 === */
+        .booking-box { 
+            background: #fff8e1; 
+            border: 2px solid #ffecb3; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin: 25px 0; 
+            text-align: center; 
+        }
+        .booking-btn {
+            display: inline-block;
+            background: var(--cta-color);
+            color: #3e2723;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         /* === PDF 層 (預設隱藏) === */
-        /* 注意：這裡不設 margin: 0 auto，避免截圖時座標偏移 */
         #pdfPrintLayer { 
             display: none; 
             width: 794px !important; 
@@ -82,10 +102,19 @@
         <div id="webAdviceList"></div>
         <div style="height:320px; margin:20px 0;"><canvas id="webRadarChart"></canvas></div>
 
+        <div class="booking-box">
+            <h3 style="color: #bf360c; margin-top:0;">💡 需要更深入的退休規劃建議？</h3>
+            <p style="font-size:0.9em; margin-bottom:15px;">您的分數顯示目前規劃仍有優化空間，建議您預約林馬丁顧問進行一對一健診。</p>
+            <a href="https://calendar.app.google/2spQUa1xxirEUKPK8" target="_blank" class="booking-btn">📅 預約林馬丁顧問 30 分鐘健診</a>
+        </div>
+
         <div id="emailCaptureZone" style="background: #fff5e6; border: 2px solid #ff9800; padding: 20px; border-radius: 12px; margin: 30px 0;">
             <h3 style="color:#e65100; margin-top:0;">📩 領取年齡專屬白皮書</h3>
             <select id="userAge" class="form-input" style="margin-bottom:10px;">
-                <option value="30-40">30-40 歲</option><option value="41-50">41-50 歲</option><option value="51-60">51-60 歲</option><option value="61+">61 歲以上</option>
+                <option value="30-40">30-40 歲 (資產衝刺期)</option>
+                <option value="41-50">41-50 歲 (黃金夾心期)</option>
+                <option value="51-60">51-60 歲 (退休準備期)</option>
+                <option value="61+">61 歲以上 (樂活享受期)</option>
             </select>
             <div style="display:flex; gap:10px;">
                 <input type="email" id="userEmail" class="form-input" placeholder="請輸入 Email">
@@ -228,11 +257,10 @@
         const pdfLayer = document.getElementById('pdfPrintLayer');
         
         try {
-            // === V59 核心：強制靠左，移除置中 ===
             appLayer.style.display = 'none';
             pdfLayer.style.display = 'block';
             
-            // 關鍵修正：強制 Body 寬度，並確保沒有 margin
+            // 強制靠左，防止裁切
             document.body.style.width = '794px';
             document.body.style.backgroundColor = 'white';
             document.body.style.margin = '0';
@@ -245,16 +273,7 @@
                 margin: 0, 
                 filename: `退休報告.pdf`, 
                 image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    windowWidth: 794, 
-                    width: 794, 
-                    x: 0, 
-                    y: 0,
-                    scrollX: 0,
-                    scrollY: 0
-                }, 
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
             };
 
@@ -297,7 +316,7 @@
     function restoreUI(width, appLayer, pdfLayer) {
         document.body.style.width = width || '';
         document.body.style.backgroundColor = 'var(--bg-color)';
-        document.body.style.margin = '0'; // 復原預設 margin
+        document.body.style.margin = '0'; 
         pdfLayer.style.display = 'none';
         appLayer.style.display = 'block';
         document.getElementById('loadingOverlay').style.display = 'none';
