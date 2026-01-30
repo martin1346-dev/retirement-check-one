@@ -20,7 +20,6 @@
             color: #333;
             margin: 0;
             padding: 20px;
-            /* 避免橫向滾動干擾 */
             overflow-x: hidden;
         }
 
@@ -36,32 +35,30 @@
         }
 
         /* === PDF 列印介面 === */
-        /* 平常隱藏，下載時會被 JS 顯示出來 */
         #pdfPrintLayer {
             display: none; 
-            width: 794px; /* A4 寬度 */
+            width: 794px; 
             margin: 0 auto; 
-            background: #525659; /* 預覽時的深色底 */
+            background: #525659; 
             padding: 20px 0;
         }
 
-        /* 單頁容器：嚴格鎖定，防止電腦版多出空白頁 */
+        /* PDF 單頁容器 */
         .pdf-page {
             width: 794px;
-            /* 關鍵：A4 高度 1123px，設定 1080px 留出緩衝，確保絕不溢出 */
-            height: 1080px; 
+            height: 1080px; /* 鎖定高度，防止溢出 */
             padding: 50px 60px;
             box-sizing: border-box;
             background: white;
             position: relative;
-            /* 內容若超出直接切掉，防止撐出第 4 頁 */
             overflow: hidden; 
-            margin-bottom: 20px; /* 頁與頁的間距 */
+            margin-bottom: 20px;
         }
 
         /* === UI 元件 === */
         h1 { color: var(--primary-color); text-align: center; margin-bottom: 20px; }
         .btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 5px; font-size: 1.2em; margin-top: 25px; cursor: pointer; }
+        
         .quadrant-box { background: #fafafa; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
         .quadrant-title { font-weight: bold; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 12px; font-size: 1.1em; }
         .question-row { display: flex; flex-direction: column; margin-bottom: 12px; }
@@ -76,7 +73,6 @@
         .web-advice-item { border-left: 5px solid var(--primary-color); background: #fff; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .chart-box-web { position: relative; height: 300px; width: 100%; max-width: 500px; margin: 30px auto; }
         
-        /* PDF 第三頁專用大圖 */
         .chart-box-pdf { 
             position: relative; 
             width: 650px; 
@@ -89,11 +85,26 @@
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 15px; text-align: center; }
         .pdf-table th { background: var(--primary-color); color: white; }
         
-        /* 下載遮罩 */
+        /* 處理中遮罩 */
         #loadingOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.92); color: white; z-index: 100000;
             text-align: center; padding-top: 40vh;
+        }
+
+        /* [V35 新增] 手動下載確認彈窗 */
+        #downloadReadyModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100001;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; width: 85%; max-width: 400px; padding: 25px; 
+            border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .download-btn-large {
+            display: block; width: 100%; padding: 15px; background: #28a745; color: white; 
+            text-decoration: none; font-size: 1.2em; border-radius: 8px; margin-top: 15px; font-weight: bold;
         }
         
         .page-footer {
@@ -106,8 +117,22 @@
 
 <div id="loadingOverlay">
     <div style="font-size:3em; margin-bottom:15px;">⏳</div>
-    <div style="font-size:1.2em; font-weight:bold;">正在建立檔案...</div>
-    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">(手機版請稍候，將開啟新視窗)</div>
+    <div style="font-size:1.2em; font-weight:bold;">正在生成 PDF...</div>
+    <div style="font-size:0.9em; color:#ccc; margin-top:10px;">請稍候，完成後將出現下載按鈕</div>
+</div>
+
+<div id="downloadReadyModal">
+    <div class="modal-content">
+        <div style="font-size:3em;">✅</div>
+        <h2 style="color:#333; margin:10px 0;">報告準備好了！</h2>
+        <p style="color:#666; font-size:0.95em; line-height:1.5; text-align:left;">
+            由於手機安全限制，請點擊下方按鈕開啟檔案。<br><br>
+            <span style="color:#d9534f; font-weight:bold;">⚠️ iPhone 用戶注意：</span><br>
+            檔案開啟後，請點擊下方 <span style="border:1px solid #ccc; padding:0 3px;">分享圖示</span> 並選擇 <span style="font-weight:bold;">「儲存到檔案」</span>。
+        </p>
+        <a id="finalDownloadLink" class="download-btn-large" target="_blank">📥 點擊開啟 PDF</a>
+        <button onclick="closeDownloadModal()" style="background:transparent; border:none; color:#999; margin-top:15px; text-decoration:underline;">關閉視窗</button>
+    </div>
 </div>
 
 <div id="mobileAppLayer">
@@ -135,14 +160,13 @@
 
         <div style="text-align:center; margin-top:40px; margin-bottom:20px;">
             <p style="color:#0056b3; font-weight:bold; margin-bottom:10px;">想保存這份分析報告嗎？</p>
-            <button class="btn" style="background:#28a745; margin-top:0;" onclick="startPdfProcess()">📥 取得 PDF 報告</button>
+            <button class="btn" style="background:#28a745; margin-top:0;" onclick="startPdfProcess()">📥 產生 PDF 報告</button>
             <button class="btn" style="background:#6c757d;" onclick="location.reload()">🔄 重新測驗</button>
         </div>
     </div>
 </div>
 
 <div id="pdfPrintLayer">
-    
     <div class="pdf-page">
         <h2 style="text-align:center; color:#0056b3; margin-top:10px; font-size: 28px;">全方位退休準備度診斷書</h2>
         <p style="text-align:right; color:#666; font-size: 14px;">診斷日期：<span id="pdfDate"></span></p>
@@ -157,13 +181,11 @@
         </table>
         <div class="page-footer">- 第 1 頁 / 共 3 頁 -</div>
     </div>
-
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 20px;">第二部分：專屬行動方針</h3>
         <div id="pdfAdviceList" style="margin-top: 30px;"></div>
         <div class="page-footer">- 第 2 頁 / 共 3 頁 -</div>
     </div>
-
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:6px solid #0056b3; padding-left:12px; margin-top:10px; font-size: 20px;">第三部分：五力分析視覺化</h3>
         <div style="text-align:center; margin-top: 40px; color:#666; font-size: 16px;">下圖展示了您在四大面向的平衡狀態</div>
@@ -277,21 +299,21 @@
         webChart = drawChart('webRadarChart', data, false);
     }
 
-    // === V34 核心：雙軌策略 (電腦直接存 / 手機開視窗) ===
+    // === V35.0 核心：雙軌策略 (電腦自動 / 手機二段式) ===
     async function startPdfProcess() {
+        // 1. 顯示處理遮罩
         document.getElementById('loadingOverlay').style.display = 'block';
-        
-        // 1. 暫存 Body 樣式 (確保還原)
-        const originalPadding = document.body.style.padding;
-        document.body.style.padding = '0';
         window.scrollTo(0, 0);
 
-        // 2. 切換 DOM：隱藏手機層，顯示 PDF 層
-        // 讓使用者看得到要印的東西 (WYSIWYG)
+        // 2. 暫存 Body 樣式
+        const originalPadding = document.body.style.padding;
+        document.body.style.padding = '0';
+
+        // 3. 切換到 PDF 介面
         document.getElementById('mobileAppLayer').style.display = 'none';
         document.getElementById('pdfPrintLayer').style.display = 'block';
 
-        // 3. 繪製 PDF 圖表
+        // 4. 繪製 PDF 圖表
         let scores = { finance: 0, health: 0, social: 0, purpose: 0 };
         document.querySelectorAll('input[type="range"]').forEach(input => {
             scores[input.dataset.cat] += parseInt(input.value);
@@ -299,14 +321,13 @@
         const data = [scores.finance, scores.health, scores.social, scores.purpose];
         
         if(pdfChart) pdfChart.destroy();
-        // 延遲確保 DOM 渲染
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 100)); // 確保 DOM 渲染
         pdfChart = drawChart('pdfRadarChart', data, true);
 
-        // 4. 等待圖表完全畫好 (安全等待 1 秒)
-        await new Promise(r => setTimeout(r, 1000));
+        // 5. 等待圖表完成 (800ms)
+        await new Promise(r => setTimeout(r, 800));
 
-        // 5. 檢測手機
+        // 6. 參數設定
         const isMobile = window.innerWidth < 800;
         const timeStr = new Date().getHours() + "" + new Date().getMinutes();
         const fileName = `退休檢測_${timeStr}.pdf`;
@@ -317,11 +338,9 @@
             filename: fileName,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
-                scale: isMobile ? 1 : 2, // 手機降規保平安
+                scale: isMobile ? 1 : 2, // 手機降規
                 useCORS: true, 
-                scrollY: 0,
-                windowWidth: 794,
-                x: 0, y: 0
+                scrollY: 0
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             enableLinks: false
@@ -329,38 +348,48 @@
 
         try {
             if (isMobile) {
-                // === 手機版策略：轉 Blob 並開新視窗 ===
-                // 這是最穩定的，因為用戶能直接看到 PDF，然後手動按分享/儲存
+                // === 手機版策略：二段式下載 ===
+                // 產生 Blob -> 顯示彈窗 -> 用戶手動點擊
                 const worker = html2pdf().set(opt).from(element);
                 const pdfBlob = await worker.output('blob');
                 const blobUrl = URL.createObjectURL(pdfBlob);
                 
-                // 嘗試開新分頁
-                const newWin = window.open(blobUrl, '_blank');
+                // 設置彈窗內的按鈕連結
+                const downloadLink = document.getElementById('finalDownloadLink');
+                downloadLink.href = blobUrl;
+                downloadLink.download = fileName; // 嘗試建議檔名 (iOS 可能會忽略)
+
+                // 隱藏處理遮罩，顯示確認彈窗
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('downloadReadyModal').style.display = 'flex';
                 
-                if (newWin) {
-                    // 成功開啟，提示用戶
-                    setTimeout(() => alert('✅ 報告已生成！\n\n請在跳出的視窗中點選「分享」圖示，然後選擇「儲存到檔案」。'), 500);
-                } else {
-                    // 被瀏覽器擋住彈窗，改用當前頁面跳轉
-                    alert('✅ 報告已生成！\n\n即將跳轉至 PDF 預覽頁面，請使用瀏覽器選單進行下載。');
-                    window.location.href = blobUrl;
-                }
             } else {
                 // === 電腦版策略：直接下載 ===
                 await html2pdf().set(opt).from(element).save();
+                
+                // 還原介面 (電腦版下載後自動還原)
+                restoreUI(originalPadding);
                 alert(`✅ 下載成功！\n檔名：${fileName}`);
             }
         } catch (err) {
             alert('❌ 發生錯誤：' + err.message);
-        } finally {
-            // 6. 還原介面
-            document.body.style.padding = originalPadding;
-            document.getElementById('pdfPrintLayer').style.display = 'none';
-            document.getElementById('mobileAppLayer').style.display = 'block';
-            document.getElementById('loadingOverlay').style.display = 'none';
-            window.scrollTo(0, 0);
+            restoreUI(originalPadding);
         }
+    }
+
+    function closeDownloadModal() {
+        // 關閉彈窗並還原介面
+        document.getElementById('downloadReadyModal').style.display = 'none';
+        restoreUI();
+    }
+
+    function restoreUI(originalPadding) {
+        // 恢復到手機填寫介面
+        document.body.style.padding = originalPadding || '20px';
+        document.getElementById('pdfPrintLayer').style.display = 'none';
+        document.getElementById('mobileAppLayer').style.display = 'block';
+        document.getElementById('loadingOverlay').style.display = 'none';
+        window.scrollTo(0, 0);
     }
 
     init();
