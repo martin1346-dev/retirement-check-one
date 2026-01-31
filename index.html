@@ -141,7 +141,7 @@
 </div>
 
 <script>
-    // === V66.1 最終正式網址 (已更新) ===
+    // === V66.2 最終正式網址 (已直接為您填好) ===
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2PjmEYAhlCiu5UJPC7d3yeA0-nCLm6IF403T7GtUn6GTJ1UF6E6bbg8183e5UA46j/exec';
     
     // 文案與題目核心
@@ -200,6 +200,7 @@
         currentData = [scores.finance, scores.health, scores.social, scores.purpose];
         const total = currentData.reduce((a,b)=>a+b, 0);
 
+        // 第一階段：送出問卷
         fetch(GOOGLE_SCRIPT_URL, { 
             method: "POST", mode: 'no-cors', 
             body: JSON.stringify({ name, phone, ...scores, total }) 
@@ -286,11 +287,14 @@
         if(!email.includes('@')) { alert("Email 格式有誤"); return; }
         btn.disabled = true; btn.innerText = "...";
         
+        // 第二階段：送出 Email
+        // 【修正點】：這裡加入了 phone 欄位，確保後端能用電話進行歸戶
         fetch(GOOGLE_SCRIPT_URL, { 
             method: "POST", mode: 'no-cors', 
             body: JSON.stringify({ 
                 action: "send_email", 
                 name: document.getElementById('userName').value, 
+                phone: document.getElementById('userPhone').value, // <--- 關鍵！將電話傳給後端
                 email, 
                 age: document.getElementById('userAge').value, 
                 total: currentData.reduce((a,b)=>a+b,0), 
@@ -301,7 +305,6 @@
             }) 
         })
         .then(() => { 
-            // === 修正回覆訊息 (Update Message) ===
             const statusDiv = document.getElementById('emailStatus');
             statusDiv.innerText = "✅ 資料已送出！請至您的信箱領取專屬的財務建議"; 
             statusDiv.style.display = "block"; 
