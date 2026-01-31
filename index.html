@@ -104,7 +104,7 @@
                 <input type="email" id="userEmail" class="form-input" placeholder="請輸入 Email">
                 <button onclick="sendEmailReport()" id="emailBtn" style="background:#e65100; color:white; border:none; padding:0 15px; border-radius:5px; font-weight:bold;">發送</button>
             </div>
-            <div id="emailStatus" style="font-size:0.85em; margin-top:8px; display:none;"></div>
+            <div id="emailStatus" style="font-size:0.85em; margin-top:8px; display:none; color: #28a745; font-weight: bold;"></div>
         </div>
 
         <button class="app-btn" style="background:#28a745;" onclick="processPDF()">📥 下載正式 PDF 診斷書</button>
@@ -141,10 +141,10 @@
 </div>
 
 <script>
-    // === V65.1 最終正式網址 (已更新) ===
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyF-w8mwfC8qaxy9eVA4WzN_NTZ9AXa_lfNLC_Y0sX7JV6jx1yfRV7o1gjhB9pXt-Qy/exec';
+    // === V66.1 最終正式網址 (已更新) ===
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2PjmEYAhlCiu5UJPC7d3yeA0-nCLm6IF403T7GtUn6GTJ1UF6E6bbg8183e5UA46j/exec';
     
-    // V56 文案與題目核心
+    // 文案與題目核心
     const questions = {
         finance: { label: "財務基站", items: ["被動收入覆蓋率 (0分<30% | 5分>100%)", "緊急預備金充足度 (0分<3個月 | 5分>6個月)", "醫療防禦係數 (0分 不足 | 5分 充足)", "負債歸零計畫 (0分 無計劃 | 5分 無負債)", "資產配置多元性 (0分 單一 | 5分 多元)"] },
         health: { label: "身心續航", items: ["身體質量指數 (BMI) (0分 異常 | 5分 標準)", "肌肉量與行動力 (0分 衰退 | 5分 良好)", "規律運動習慣 (0分 不運動 | 5分 每週多於三次)", "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"] },
@@ -200,7 +200,6 @@
         currentData = [scores.finance, scores.health, scores.social, scores.purpose];
         const total = currentData.reduce((a,b)=>a+b, 0);
 
-        // 完整數據發送 (含年齡、Email、各項分數)
         fetch(GOOGLE_SCRIPT_URL, { 
             method: "POST", mode: 'no-cors', 
             body: JSON.stringify({ name, phone, ...scores, total }) 
@@ -237,13 +236,11 @@
         const pdfLayer = document.getElementById('pdfPrintLayer');
         
         try {
-            // === Gem 鐵律：暴力切換 + 座標歸零 ===
             appLayer.style.display = 'none';
             pdfLayer.style.display = 'block';
-            
             document.body.style.width = '794px';
             document.body.style.backgroundColor = 'white';
-            document.body.style.margin = '0'; // 關鍵：移除邊距，防止裁切
+            document.body.style.margin = '0';
             
             if(pdfChart) pdfChart.destroy();
             pdfChart = createChart('pdfRadarChart', currentData, true);
@@ -289,14 +286,13 @@
         if(!email.includes('@')) { alert("Email 格式有誤"); return; }
         btn.disabled = true; btn.innerText = "...";
         
-        // 傳送包含 userAge 的資料，觸發後端查表派信
         fetch(GOOGLE_SCRIPT_URL, { 
             method: "POST", mode: 'no-cors', 
             body: JSON.stringify({ 
                 action: "send_email", 
                 name: document.getElementById('userName').value, 
                 email, 
-                age: document.getElementById('userAge').value, // 傳送關鍵參數：年齡
+                age: document.getElementById('userAge').value, 
                 total: currentData.reduce((a,b)=>a+b,0), 
                 finance: currentData[0], 
                 health: currentData[1], 
@@ -304,8 +300,19 @@
                 purpose: currentData[3] 
             }) 
         })
-        .then(() => { document.getElementById('emailStatus').innerText = "✅ 預約成功！請查看信箱"; document.getElementById('emailStatus').style.display = "block"; })
-        .catch(() => { btn.disabled = false; alert("連線異常，請稍後再試"); });
+        .then(() => { 
+            // === 修正回覆訊息 (Update Message) ===
+            const statusDiv = document.getElementById('emailStatus');
+            statusDiv.innerText = "✅ 資料已送出！請至您的信箱領取專屬的財務建議"; 
+            statusDiv.style.display = "block"; 
+            
+            btn.innerText = "已發送";
+        })
+        .catch(() => { 
+            btn.disabled = false; 
+            btn.innerText = "發送";
+            alert("連線異常，請稍後再試"); 
+        });
     }
 
     function restoreUI(width, appLayer, pdfLayer) {
