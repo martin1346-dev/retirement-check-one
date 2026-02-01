@@ -24,10 +24,10 @@
         .question-row { display: flex; flex-direction: column; margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
         .input-wrapper { display: flex; flex-direction: column; width: 100%; margin-top: 8px; }
         
-        /* === V67.6 優化：滑桿與刻度樣式 === */
+        /* === V67.7 優化：滑桿樣式 (移除多餘數字，保留刻度) === */
         .range-container { display: flex; align-items: center; width: 100%; }
         input[type="range"] { 
-            -webkit-appearance: none; flex: 1; margin: 0 10px; height: 8px; background: #e9ecef; border-radius: 5px; outline: none; 
+            -webkit-appearance: none; flex: 1; margin: 0 5px; height: 8px; background: #e9ecef; border-radius: 5px; outline: none; 
         }
         input[type="range"]::-webkit-slider-thumb { 
             -webkit-appearance: none; appearance: none;
@@ -36,9 +36,8 @@
             cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         /* 刻度標示 */
-        .ticks { display: flex; justify-content: space-between; padding: 0 12px; margin-top: 5px; color: #999; font-size: 12px; }
-        .current-score { font-weight: bold; color: var(--primary-color); width: 30px; text-align: center; font-size: 1.1em; }
-
+        .ticks { display: flex; justify-content: space-between; padding: 0 8px; margin-top: 5px; color: #999; font-size: 12px; }
+        
         @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; align-items: flex-start; } .input-wrapper { width: 50%; margin-top: 0; } }
 
         .booking-box { background: #fff8e1; border: 2px solid #ffecb3; padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center; }
@@ -51,31 +50,29 @@
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px; text-align: center; font-size: 16px; }
         .pdf-table th { background: var(--primary-color); color: white; }
         
-        .chart-box-pdf { width: 600px; height: 500px; margin: 50px auto; }
+        .chart-box-pdf { width: 600px; height: 500px; margin: 30px auto; } /* 微調圖表間距 */
         .page-footer { position: absolute; bottom: 30px; width: 100%; left: 0; text-align: center; color: #999; font-size: 12px; }
 
-        /* === 建議卡片樣式 (Web 與 PDF 共用) === */
-        /* Web 版：單欄顯示 */
-        .web-card-container .advice-card {
-            background-color: #f8f9fa; border-left: 5px solid var(--primary-color); padding: 15px; margin-bottom: 15px; border-radius: 5px;
-        }
+        /* === 建議卡片樣式 === */
+        /* Web 版 */
+        .web-card-container .advice-card { background-color: #f8f9fa; border-left: 5px solid var(--primary-color); padding: 15px; margin-bottom: 15px; border-radius: 5px; }
         .web-card-container .advice-header { font-weight: bold; color: #333; margin-bottom: 5px; font-size: 1.1em; }
         .web-card-container .advice-content { font-size: 0.95em; color: #555; line-height: 1.5; }
         .web-card-container ul { margin: 5px 0 0 0; padding-left: 20px; }
 
-        /* PDF 版：田字型排版 (Grid) */
+        /* PDF 版 (田字型) */
         #pdfAdviceList { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; }
-        #pdfAdviceList .advice-card {
-            width: 48%; box-sizing: border-box; background-color: #f8f9fa;
-            border-top: 4px solid var(--primary-color); padding: 15px;
-            margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        #pdfAdviceList .advice-card { width: 48%; box-sizing: border-box; background-color: #f8f9fa; border-top: 4px solid var(--primary-color); padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         #pdfAdviceList .advice-header { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         #pdfAdviceList .advice-content { font-size: 12.5px; color: #444; line-height: 1.4; text-align: justify; }
         #pdfAdviceList ul { margin: 5px 0 0 0; padding-left: 15px; }
         #pdfAdviceList li { margin-bottom: 3px; }
 
         .consultant-note { width: 100%; margin-top: 15px; padding: 15px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 8px; box-sizing: border-box; }
+
+        /* V67.7 新增：PDF 聯絡資訊區塊 */
+        .contact-info { margin-top: 30px; padding: 15px; background: #e9f5ff; border: 1px solid #b8daff; border-radius: 12px; text-align: center; color: #333; }
+        .contact-link { display: block; margin: 5px 0; color: #0056b3; text-decoration: none; font-weight: bold; font-size: 14px; }
 
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; z-index: 100000; text-align: center; padding-top: 40vh; }
         #mobileDownloadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200001; justify-content: center; align-items: center; }
@@ -169,9 +166,16 @@
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">核心分析圖譜</h3>
         <div class="chart-box-pdf"><canvas id="pdfRadarChart"></canvas></div>
-        <div style="text-align:center; margin-top:100px; padding:30px; background:#f9f9f9; border-radius:15px;">
-            <p style="font-size:18px; font-weight:bold; color:#333;">本報告由林馬丁退休精算系統生成</p>
-            <p style="color:#666;">數據僅供參考，實際規劃請預約 CFP 顧問諮詢。</p>
+        
+        <div class="contact-info">
+            <div style="font-size:16px; font-weight:bold; margin-bottom:10px;">追蹤林馬丁顧問，獲取更多退休新知</div>
+            <a href="https://line.me/ti/p/AU0et1gfA2" target="_blank" class="contact-link">📱 Line: https://line.me/ti/p/AU0et1gfA2</a>
+            <a href="https://www.youtube.com/@1346martin" target="_blank" class="contact-link">📺 YouTube: https://www.youtube.com/@1346martin</a>
+        </div>
+
+        <div style="text-align:center; margin-top:30px; padding:20px; background:#f9f9f9; border-radius:15px;">
+            <p style="font-size:16px; font-weight:bold; color:#333;">本報告由林馬丁退休精算系統生成</p>
+            <p style="color:#666; font-size:14px;">數據僅供參考，實際規劃請預約 CFP 顧問諮詢。</p>
         </div>
         <div class="page-footer">- 第 3 頁：分析圖表 -</div>
     </div>
@@ -183,8 +187,8 @@
     const questions = {
         finance: { 
             label: "💰 財務準備", 
-            // V67.6 修正：投資標的
-            items: ["不工作後的收入比例 (0分<30% | 5分>100%)", "臨時急用的現金存量 (0分<3個月 | 5分>6個月)", "醫療保險足夠程度 (0分 不足 | 5分 充足)", "目前負債處理狀況 (0分 無計劃 | 5分 無負債)", "投資標的的分散程度 (0分 單一 | 5分 多元)"] 
+            // V67.7 修正：文案修正 (投資標的)
+            items: ["不工作後的收入比例 (0分<30% | 5分>100%)", "臨時急用的現金存量 (0分<3個月 | 5分>6個月)", "醫療保險足夠程度 (0分 不足 | 5分 充足)", "目前負債處理狀況 (0分 無計劃 | 5分 無負債)", "投資標的分散程度 (0分 單一 | 5分 多元)"] 
         },
         health: { 
             label: "❤️ 健康活力", 
@@ -235,14 +239,13 @@
             let section = document.createElement('div'); section.className = 'app-box';
             section.innerHTML = `<div class="app-title">${questions[key].label}</div>`;
             questions[key].items.forEach(item => {
-                // V67.6 優化：加入刻度顯示 (0 1 2 3 4 5)
+                // V67.7 驗收：移除動態數字，保留刻度
                 section.innerHTML += `
                 <div class="question-row">
                     <span style="font-size:0.95em;">${item}</span>
                     <div class="input-wrapper">
                         <div class="range-container">
-                            <input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.parentElement.nextElementSibling.innerText = this.value">
-                            <span class="current-score">0</span>
+                            <input type="range" min="0" max="5" value="0" data-cat="${key}">
                         </div>
                         <div class="ticks">
                             <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
@@ -286,24 +289,21 @@
         document.getElementById('pdfTotal').innerText = total;
         document.getElementById('pdfUserName').innerText = name;
         
-        // V67.6：Web 與 PDF 共用 Advice 邏輯，確保 Web 顯示豐富內容
         let adviceHtml = '', pdfTable = '', pdfAdvice = '';
         for(let key in questions) {
             let s = scores[key];
             let status = s>=20?"優良":(s>=11?"尚可":"加油");
             let adviceContent = getAdvice(s, key);
             
-            // Web 版：使用 web-card-container 樣式
+            // Web 版與 PDF 共用建議邏輯
             adviceHtml += `
             <div class="advice-card">
                 <div class="advice-header">${questions[key].label} (評級: ${status})</div>
                 <div class="advice-content">${adviceContent}</div>
             </div>`;
             
-            // PDF 表格
             pdfTable += `<tr><td>${questions[key].label}</td><td>${s}</td><td>${status}</td></tr>`;
             
-            // PDF 卡片 (田字型)
             pdfAdvice += `
             <div class="advice-card">
                 <div class="advice-header">${questions[key].label} (評級: ${status})</div>
