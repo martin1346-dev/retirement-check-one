@@ -21,39 +21,32 @@
         .form-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; margin-top: 5px; box-sizing: border-box; }
         
         .error-msg { color: #d9534f; font-size: 0.9em; display: none; margin-top: 5px; }
-        .question-row { display: flex; flex-direction: column; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-        .input-wrapper { display: flex; align-items: center; margin-top: 5px; }
+        .question-row { display: flex; flex-direction: column; margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+        .input-wrapper { display: flex; flex-direction: column; width: 100%; margin-top: 8px; }
         
-        /* === V67.0 優化：滑桿樣式 (橘色按鈕 + 軌道優化) === */
-        input[type="range"] {
-            -webkit-appearance: none; flex: 1; margin: 0 10px; height: 6px; background: #e9ecef; border-radius: 5px; outline: none;
+        /* === V67.6 優化：滑桿與刻度樣式 === */
+        .range-container { display: flex; align-items: center; width: 100%; }
+        input[type="range"] { 
+            -webkit-appearance: none; flex: 1; margin: 0 10px; height: 8px; background: #e9ecef; border-radius: 5px; outline: none; 
         }
-        input[type="range"]::-webkit-slider-thumb {
+        input[type="range"]::-webkit-slider-thumb { 
             -webkit-appearance: none; appearance: none;
             width: 24px; height: 24px; border-radius: 50%; 
-            background: var(--cta-color); /* 橘色按鈕 */
-            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: var(--cta-color); border: 2px solid white;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
-        input[type="range"]::-moz-range-thumb {
-            width: 24px; height: 24px; border-radius: 50%;
-            background: var(--cta-color);
-            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: none;
-        }
+        /* 刻度標示 */
+        .ticks { display: flex; justify-content: space-between; padding: 0 12px; margin-top: 5px; color: #999; font-size: 12px; }
+        .current-score { font-weight: bold; color: var(--primary-color); width: 30px; text-align: center; font-size: 1.1em; }
 
-        @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; } .input-wrapper { width: 45%; margin-top: 0; } }
+        @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; align-items: flex-start; } .input-wrapper { width: 50%; margin-top: 0; } }
 
-        /* === 預約顧問區塊 === */
         .booking-box { background: #fff8e1; border: 2px solid #ffecb3; padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center; }
         .booking-btn { display: inline-block; background: var(--cta-color); color: #3e2723; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* === PDF 層設定 (A4 尺寸) === */
-        #pdfPrintLayer { 
-            display: none; 
-            width: 794px !important; 
-            min-width: 794px !important; 
-            background: white; 
-        }
-        .pdf-page { width: 794px; height: 1080px; padding: 50px 60px; box-sizing: border-box; background: white; position: relative; overflow: hidden; border-bottom: 1px solid #eee; }
+        /* === PDF 層設定 === */
+        #pdfPrintLayer { display: none; width: 794px !important; min-width: 794px !important; background: white; }
+        .pdf-page { width: 794px; height: 1080px; padding: 50px 60px; box-sizing: border-box; background: white; position: relative; border-bottom: 1px solid #eee; }
         .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px; text-align: center; font-size: 16px; }
         .pdf-table th { background: var(--primary-color); color: white; }
@@ -61,44 +54,28 @@
         .chart-box-pdf { width: 600px; height: 500px; margin: 50px auto; }
         .page-footer { position: absolute; bottom: 30px; width: 100%; left: 0; text-align: center; color: #999; font-size: 12px; }
 
-        /* === V67.4 田字型排版 CSS (Grid Layout) === */
-        /* 容器：設為 Flex 且允許換行 */
-        #pdfAdviceList {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between; /* 左右分散對齊 */
-            margin-top: 20px;
+        /* === 建議卡片樣式 (Web 與 PDF 共用) === */
+        /* Web 版：單欄顯示 */
+        .web-card-container .advice-card {
+            background-color: #f8f9fa; border-left: 5px solid var(--primary-color); padding: 15px; margin-bottom: 15px; border-radius: 5px;
         }
-        /* 卡片：寬度設為 48% 以便一列放兩個 */
-        .advice-card {
-            width: 48%; 
-            box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
-            background-color: #f8f9fa;
-            border-top: 4px solid var(--primary-color); /* 改為上方邊框，比較像卡片 */
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 輕微陰影增加立體感 */
-        }
-        .advice-header { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .advice-content { font-size: 13px; color: #444; line-height: 1.4; text-align: justify; }
-        .advice-content ul { margin: 5px 0 0 0; padding-left: 15px; }
-        .advice-content li { margin-bottom: 3px; }
+        .web-card-container .advice-header { font-weight: bold; color: #333; margin-bottom: 5px; font-size: 1.1em; }
+        .web-card-container .advice-content { font-size: 0.95em; color: #555; line-height: 1.5; }
+        .web-card-container ul { margin: 5px 0 0 0; padding-left: 20px; }
 
-        /* 顧問小叮嚀區塊 */
-        .consultant-note {
-            width: 100%;
-            margin-top: 10px;
-            padding: 15px;
-            background: #fff8e1;
-            border: 1px solid #ffecb3;
-            border-radius: 8px;
-            position: absolute; /* 強制固定在頁面下方，避免亂跑 */
-            bottom: 80px; /* 頁碼上方 */
-            left: 60px; /* 配合 padding */
-            width: 674px; /* 794 - 120 padding */
-            box-sizing: border-box;
+        /* PDF 版：田字型排版 (Grid) */
+        #pdfAdviceList { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; }
+        #pdfAdviceList .advice-card {
+            width: 48%; box-sizing: border-box; background-color: #f8f9fa;
+            border-top: 4px solid var(--primary-color); padding: 15px;
+            margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+        #pdfAdviceList .advice-header { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        #pdfAdviceList .advice-content { font-size: 12.5px; color: #444; line-height: 1.4; text-align: justify; }
+        #pdfAdviceList ul { margin: 5px 0 0 0; padding-left: 15px; }
+        #pdfAdviceList li { margin-bottom: 3px; }
+
+        .consultant-note { width: 100%; margin-top: 15px; padding: 15px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: 8px; box-sizing: border-box; }
 
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; z-index: 100000; text-align: center; padding-top: 40vh; }
         #mobileDownloadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200001; justify-content: center; align-items: center; }
@@ -135,7 +112,7 @@
             <div id="webTotal" style="font-size: 4em; font-weight: bold; color: #d9534f;">0</div>
         </div>
         
-        <div id="webAdviceList"></div>
+        <div id="webAdviceList" class="web-card-container"></div>
         <div style="height:320px; margin:20px 0;"><canvas id="webRadarChart"></canvas></div>
 
         <div class="booking-box">
@@ -181,9 +158,7 @@
     
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">專屬行動方針與建議</h3>
-        
         <div id="pdfAdviceList"></div>
-        
         <div class="consultant-note">
             <div style="font-weight:bold; color:#e65100; font-size:16px;">💡 顧問小叮嚀</div>
             <div style="font-size:14px; color:#555; margin-top:5px; line-height:1.4;">退休規劃是一場馬拉松，重點在於「資產配置」與「現金流管理」。建議您每年定期檢視此報告，隨時動態調整您的準備策略。若有執行上的疑問，歡迎隨時預約諮詢。</div>
@@ -203,13 +178,13 @@
 </div>
 
 <script>
-    // === V66.2 網址 (維持不變) ===
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2PjmEYAhlCiu5UJPC7d3yeA0-nCLm6IF403T7GtUn6GTJ1UF6E6bbg8183e5UA46j/exec';
     
     const questions = {
         finance: { 
             label: "💰 財務準備", 
-            items: ["不工作後的收入比例 (0分<30% | 5分>100%)", "臨時急用的現金存量 (0分<3個月 | 5分>6個月)", "醫療保險足夠程度 (0分 不足 | 5分 充足)", "目前負債處理狀況 (0分 無計劃 | 5分 無負債)", "投資雞蛋的分散程度 (0分 單一 | 5分 多元)"] 
+            // V67.6 修正：投資標的
+            items: ["不工作後的收入比例 (0分<30% | 5分>100%)", "臨時急用的現金存量 (0分<3個月 | 5分>6個月)", "醫療保險足夠程度 (0分 不足 | 5分 充足)", "目前負債處理狀況 (0分 無計劃 | 5分 無負債)", "投資標的的分散程度 (0分 單一 | 5分 多元)"] 
         },
         health: { 
             label: "❤️ 健康活力", 
@@ -226,7 +201,6 @@
     };
 
     function getAdvice(score, type) {
-        // === V67.5 文案確認：包含四大面向完整內容 ===
         const logic = {
             finance: { 
                 low: "<b>這叫做「月光族危機」</b><br>如果明天不工作，下個月的帳單可能就繳不出來。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>先還「壞債」</b>：優先還掉利息最高的（如卡債）。</li><li><b>存一筆「救命錢」</b>：目標存到「沒工作也能活 3-6 個月」的金額。</li><li><b>抓漏</b>：找出「不花也不會死」的開銷先砍掉。</li></ul>", 
@@ -261,7 +235,20 @@
             let section = document.createElement('div'); section.className = 'app-box';
             section.innerHTML = `<div class="app-title">${questions[key].label}</div>`;
             questions[key].items.forEach(item => {
-                section.innerHTML += `<div class="question-row"><span style="font-size:0.95em;">${item}</span><div class="input-wrapper"><input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.nextElementSibling.innerText = this.value"><span>0</span></div></div>`;
+                // V67.6 優化：加入刻度顯示 (0 1 2 3 4 5)
+                section.innerHTML += `
+                <div class="question-row">
+                    <span style="font-size:0.95em;">${item}</span>
+                    <div class="input-wrapper">
+                        <div class="range-container">
+                            <input type="range" min="0" max="5" value="0" data-cat="${key}" oninput="this.parentElement.nextElementSibling.innerText = this.value">
+                            <span class="current-score">0</span>
+                        </div>
+                        <div class="ticks">
+                            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                        </div>
+                    </div>
+                </div>`;
             });
             container.appendChild(section);
         }
@@ -299,19 +286,28 @@
         document.getElementById('pdfTotal').innerText = total;
         document.getElementById('pdfUserName').innerText = name;
         
+        // V67.6：Web 與 PDF 共用 Advice 邏輯，確保 Web 顯示豐富內容
         let adviceHtml = '', pdfTable = '', pdfAdvice = '';
         for(let key in questions) {
             let s = scores[key];
             let status = s>=20?"優良":(s>=11?"尚可":"加油");
-            // Web 版顯示精簡版
-            adviceHtml += `<div><b>${questions[key].label}</b>: ${s} 分 (${status})</div>`;
+            let adviceContent = getAdvice(s, key);
+            
+            // Web 版：使用 web-card-container 樣式
+            adviceHtml += `
+            <div class="advice-card">
+                <div class="advice-header">${questions[key].label} (評級: ${status})</div>
+                <div class="advice-content">${adviceContent}</div>
+            </div>`;
+            
             // PDF 表格
             pdfTable += `<tr><td>${questions[key].label}</td><td>${s}</td><td>${status}</td></tr>`;
-            // PDF 卡片內容
+            
+            // PDF 卡片 (田字型)
             pdfAdvice += `
             <div class="advice-card">
                 <div class="advice-header">${questions[key].label} (評級: ${status})</div>
-                <div class="advice-content">${getAdvice(s, key)}</div>
+                <div class="advice-content">${adviceContent}</div>
             </div>`;
         }
         document.getElementById('webAdviceList').innerHTML = adviceHtml;
