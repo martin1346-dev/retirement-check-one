@@ -23,29 +23,83 @@
         .error-msg { color: #d9534f; font-size: 0.9em; display: none; margin-top: 5px; }
         .question-row { display: flex; flex-direction: column; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
         .input-wrapper { display: flex; align-items: center; margin-top: 5px; }
-        input[type="range"] { flex: 1; margin: 0 10px; }
+        
+        /* === V67.0 優化：滑桿樣式 (橘色按鈕 + 軌道優化) === */
+        input[type="range"] {
+            -webkit-appearance: none; flex: 1; margin: 0 10px; height: 6px; background: #e9ecef; border-radius: 5px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 24px; height: 24px; border-radius: 50%; 
+            background: var(--cta-color); /* 橘色按鈕 */
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--cta-color);
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: none;
+        }
+
         @media(min-width: 600px) { .question-row { flex-direction: row; justify-content: space-between; } .input-wrapper { width: 45%; margin-top: 0; } }
 
         /* === 預約顧問區塊 === */
         .booking-box { background: #fff8e1; border: 2px solid #ffecb3; padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center; }
         .booking-btn { display: inline-block; background: var(--cta-color); color: #3e2723; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* === PDF 層 (預設隱藏，生成時顯示) === */
+        /* === PDF 層設定 (A4 尺寸) === */
         #pdfPrintLayer { 
             display: none; 
             width: 794px !important; 
             min-width: 794px !important; 
             background: white; 
-            /* 鐵律：不使用 margin: auto，避免座標偏移 */
         }
         .pdf-page { width: 794px; height: 1080px; padding: 50px 60px; box-sizing: border-box; background: white; position: relative; overflow: hidden; border-bottom: 1px solid #eee; }
         .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px; text-align: center; font-size: 16px; }
         .pdf-table th { background: var(--primary-color); color: white; }
+        
         .chart-box-pdf { width: 600px; height: 500px; margin: 50px auto; }
         .page-footer { position: absolute; bottom: 30px; width: 100%; left: 0; text-align: center; color: #999; font-size: 12px; }
 
-        /* === 狀態提示層 === */
+        /* === V67.4 田字型排版 CSS (Grid Layout) === */
+        /* 容器：設為 Flex 且允許換行 */
+        #pdfAdviceList {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between; /* 左右分散對齊 */
+            margin-top: 20px;
+        }
+        /* 卡片：寬度設為 48% 以便一列放兩個 */
+        .advice-card {
+            width: 48%; 
+            box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
+            background-color: #f8f9fa;
+            border-top: 4px solid var(--primary-color); /* 改為上方邊框，比較像卡片 */
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 輕微陰影增加立體感 */
+        }
+        .advice-header { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .advice-content { font-size: 13px; color: #444; line-height: 1.4; text-align: justify; }
+        .advice-content ul { margin: 5px 0 0 0; padding-left: 15px; }
+        .advice-content li { margin-bottom: 3px; }
+
+        /* 顧問小叮嚀區塊 */
+        .consultant-note {
+            width: 100%;
+            margin-top: 10px;
+            padding: 15px;
+            background: #fff8e1;
+            border: 1px solid #ffecb3;
+            border-radius: 8px;
+            position: absolute; /* 強制固定在頁面下方，避免亂跑 */
+            bottom: 80px; /* 頁碼上方 */
+            left: 60px; /* 配合 padding */
+            width: 674px; /* 794 - 120 padding */
+            box-sizing: border-box;
+        }
+
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; z-index: 100000; text-align: center; padding-top: 40vh; }
         #mobileDownloadModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200001; justify-content: center; align-items: center; }
     </style>
@@ -118,19 +172,27 @@
         <p style="text-align:right; font-size:14px; margin-top:20px;">顧問：CFP 國際理財顧問 林馬丁 | <span id="pdfDate"></span></p>
         <div style="text-align:center; margin-top:50px;"><p style="font-size:24px;">受測者：<span id="pdfUserName" style="font-weight:bold;"></span></p></div>
         <div style="text-align:center; background:#f8f9fa; padding:40px; margin:40px 60px; border-radius:20px; border:2px solid #eee;">
-            <div style="font-size:1.5em; color:#555; margin-bottom:10px;">退休五力核心總分</div>
+            <div style="font-size:1.5em; color:#555; margin-bottom:10px;">退休準備核心總分</div>
             <div style="font-size:7em; font-weight:bold; color:#d9534f; line-height:1;" id="pdfTotal">0</div>
         </div>
         <div style="padding: 0 40px;"><table class="pdf-table"><thead><tr><th width="40%">測評面向</th><th width="20%">得分</th><th width="40%">狀態評估</th></tr></thead><tbody id="pdfTableBody"></tbody></table></div>
         <div class="page-footer">- 第 1 頁：核心評分 -</div>
     </div>
+    
     <div class="pdf-page">
         <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">專屬行動方針與建議</h3>
-        <div id="pdfAdviceList" style="margin-top:30px;"></div>
+        
+        <div id="pdfAdviceList"></div>
+        
+        <div class="consultant-note">
+            <div style="font-weight:bold; color:#e65100; font-size:16px;">💡 顧問小叮嚀</div>
+            <div style="font-size:14px; color:#555; margin-top:5px; line-height:1.4;">退休規劃是一場馬拉松，重點在於「資產配置」與「現金流管理」。建議您每年定期檢視此報告，隨時動態調整您的準備策略。若有執行上的疑問，歡迎隨時預約諮詢。</div>
+        </div>
         <div class="page-footer">- 第 2 頁：專業建議 -</div>
     </div>
+    
     <div class="pdf-page">
-        <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">五力分析圖譜</h3>
+        <h3 style="color:#0056b3; border-left:8px solid #0056b3; padding-left:15px; font-size:24px; margin-top:40px;">核心分析圖譜</h3>
         <div class="chart-box-pdf"><canvas id="pdfRadarChart"></canvas></div>
         <div style="text-align:center; margin-top:100px; padding:30px; background:#f9f9f9; border-radius:15px;">
             <p style="font-size:18px; font-weight:bold; color:#333;">本報告由林馬丁退休精算系統生成</p>
@@ -141,23 +203,51 @@
 </div>
 
 <script>
-    // === V66.2 最終正式網址 (已直接為您填好) ===
+    // === V66.2 網址 (維持不變) ===
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2PjmEYAhlCiu5UJPC7d3yeA0-nCLm6IF403T7GtUn6GTJ1UF6E6bbg8183e5UA46j/exec';
     
-    // 文案與題目核心
     const questions = {
-        finance: { label: "財務基站", items: ["被動收入覆蓋率 (0分<30% | 5分>100%)", "緊急預備金充足度 (0分<3個月 | 5分>6個月)", "醫療防禦係數 (0分 不足 | 5分 充足)", "負債歸零計畫 (0分 無計劃 | 5分 無負債)", "資產配置多元性 (0分 單一 | 5分 多元)"] },
-        health: { label: "身心續航", items: ["身體質量指數 (BMI) (0分 異常 | 5分 標準)", "肌肉量與行動力 (0分 衰退 | 5分 良好)", "規律運動習慣 (0分 不運動 | 5分 每週多於三次)", "睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "家族病史追蹤 (0分 無體檢習慣 | 5分 每年定期檢查)"] },
-        social: { label: "社交漫遊", items: ["非職場朋友數量 (0分 少於三人 | 5分 多於十人)", "跨代連結頻率 (0分 無 | 5分 頻繁)", "社群參與度 (0分 孤立 | 5分 積極投入)", "親密關係帳戶 (0分 疏遠 | 5分 緊密支持)", "緊急救援網 (0分 無建立 | 5分 隨時可求助)"] },
-        purpose: { label: "第二人生", items: ["身份認同切換 (0分 無法 | 5分 順利轉換)", "時間結構化能力 (0分 混亂 | 5分 井然有序)", "心流體驗頻率 (0分 無 | 5分 經常發生)", "學習新技能意願 (0分 無意願 | 5分 持續學習)", "圓夢執行力 (0分 拖延 | 5分 積極行動)"] }
+        finance: { 
+            label: "💰 財務準備", 
+            items: ["不工作後的收入比例 (0分<30% | 5分>100%)", "臨時急用的現金存量 (0分<3個月 | 5分>6個月)", "醫療保險足夠程度 (0分 不足 | 5分 充足)", "目前負債處理狀況 (0分 無計劃 | 5分 無負債)", "投資雞蛋的分散程度 (0分 單一 | 5分 多元)"] 
+        },
+        health: { 
+            label: "❤️ 健康活力", 
+            items: ["目前體重標準程度 (0分 異常 | 5分 標準)", "體能與行動靈活度 (0分 衰退 | 5分 良好)", "每週規律運動習慣 (0分 不運動 | 5分 每週多於三次)", "每天睡眠品質 (0分 小於五小時 | 5分 多於七小時)", "定期健康檢查習慣 (0分 無體檢習慣 | 5分 每年定期檢查)"] 
+        },
+        social: { 
+            label: "🤝 人際關係", 
+            items: ["職場以外的朋友圈 (0分 少於三人 | 5分 多於十人)", "與年輕人的互動頻率 (0分 無 | 5分 頻繁)", "興趣社團參與程度 (0分 孤立 | 5分 積極投入)", "與家人伴侶的親密度 (0分 疏遠 | 5分 緊密支持)", "生病時誰能照顧你 (0分 無建立 | 5分 隨時可求助)"] 
+        },
+        purpose: { 
+            label: "🌟 生活目標", 
+            items: ["離開職場的心態調適 (0分 無法 | 5分 順利轉換)", "安排退休時間的能力 (0分 混亂 | 5分 井然有序)", "投入興趣的快樂程度 (0分 無 | 5分 經常發生)", "學習新事物的意願 (0分 無意願 | 5分 持續學習)", "夢想清單執行進度 (0分 拖延 | 5分 積極行動)"] 
+        }
     };
 
     function getAdvice(score, type) {
+        // === V67.5 文案確認：包含四大面向完整內容 ===
         const logic = {
-            finance: { low: "生存焦慮期：被動收入嚴重不足。建議優先執行債務雪球法，並強制存滿3個月緊急預備金。", mid: "資產累積期：資產抗通膨力脆弱。建議將被動收入覆蓋率目標設為70%，並補足醫療缺口。", high: "財富傳承期：財務自由。建議諮詢信託架構或稅務規劃，確保資產能依您的意願傳承。" },
-            health: { low: "健康崩壞期：退休最大隱憂。請立即預約健檢，並從「每天步行15分鐘」與減糖飲食開始。", mid: "亞健康調整期：肌力有流失風險。建議每週至少2次阻力訓練，並配戴裝置監控睡眠。", high: "樂活長壽期：體況極佳。建議持續挑戰需「腦體協調」的新運動（如網球、舞蹈）。" },
-            social: { low: "孤島效應期：生活圈封閉。建議每月主動聯繫老友，並強制自己參加一個實體興趣社團。", mid: "社交重組期：連結深度不足。建議挑選3位朋友建立深度聚會，並建立緊急互助聯絡網。", high: "社群樞紐期：人脈廣闊。建議進行社交斷捨離，將時間留給真正滋養心靈的深度關係。" },
-            purpose: { low: "失去重力期：自我價值迷惘。請練習「不提職稱」介紹自己，列出10個興趣進行低成本試錯。", mid: "探索定錨期：缺乏執行力。請設定具體的學習目標（如考證照），將興趣轉化為產出。", high: "自我實現期：目標清晰。請即刻啟動圓夢大計畫，或透過寫作、演講分享人生智慧。" }
+            finance: { 
+                low: "<b>這叫做「月光族危機」</b><br>如果明天不工作，下個月的帳單可能就繳不出來。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>先還「壞債」</b>：優先還掉利息最高的（如卡債）。</li><li><b>存一筆「救命錢」</b>：目標存到「沒工作也能活 3-6 個月」的金額。</li><li><b>抓漏</b>：找出「不花也不會死」的開銷先砍掉。</li></ul>", 
+                mid: "<b>這叫做「錢變薄了」</b><br>您有存錢，但若只放定存，被通膨吃掉後其實是在變少。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>打造「領薪水機器」</b>：目標讓「勞保+配息」達到現在薪水的 70%。</li><li><b>錢要「動起來」</b>：留2-3年生活費，剩下買大盤ETF。</li><li><b>分散風險</b>：退休前5年慢慢賣掉自家公司股票。</li></ul>", 
+                high: "<b>這叫做「富足且傳承」</b><br>錢這輩子花不完，現在要煩惱的是怎麼給孩子才不會害了他們。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>寫好「使用說明書」</b>：利用信託，依照規矩給錢。</li><li><b>節稅規劃</b>：善用每年贈與額度，慢慢轉移資產。</li><li><b>當別人的貴人</b>：資助創業或公益，獲得快樂。</li></ul>" 
+            },
+            health: { 
+                low: "<b>這叫做「亮紅燈警告」</b><br>身體零件快壞了，如果不趕快修，可能很快就要常跑醫院。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>只要走 15 分鐘就好</b>：從每天走路 15 分鐘開始。</li><li><b>戒掉「糖」</b>：含糖飲料是身體發炎元兇。</li><li><b>全身大檢查</b>：不要怕看紅字，早點發現才能早點修。</li></ul>", 
+                mid: "<b>這叫做「電力衰退」</b><br>沒什麼大病，但容易累，爬個樓梯就喘，肌肉鬆垮垮的。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>存「肌肉本」</b>：每週兩次深蹲。肌肉是防護氣囊。</li><li><b>腦袋要關機</b>：每天離開手機 2 小時，避免腦袋過勞。</li><li><b>睡好覺</b>：睡前 1 小時不看藍光螢幕。</li></ul>", 
+                high: "<b>這叫做「身手矯健」</b><br>身體狀況比實際年齡還年輕，能跑能跳，頭腦清楚。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>玩點難的</b>：學跳舞、打網球，預防失智。</li><li><b>挑戰心肺</b>：每週運動 5 次，保持心臟強而有力。</li></ul>" 
+            },
+            social: { 
+                low: "<b>這叫做「沒了名片沒朋友」</b><br>以前朋友都是同事，退休沒了職位，大家就不聯絡了。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>主動打個電話</b>：找老友喝咖啡，重點是「絕對不聊工作」。</li><li><b>強迫出門</b>：報名實體社團，別只傳長輩圖。</li><li><b>清理手機</b>：把只談公事的人刪掉。</li></ul>", 
+                mid: "<b>這叫做「朋友多但交情淺」</b><br>認識很多人，但真正心情不好時，不知道該打給誰。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>找這三種朋友</b>：運動咖、同好咖、真心咖。</li><li><b>建立「救命通訊錄」</b>：出事能馬上趕到的朋友。</li></ul>", 
+                high: "<b>這叫做「人氣王」</b><br>朋友很多，活動排滿滿，大家都很喜歡您。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>朋友要「斷捨離」</b>：充滿負能量的朋友少聯絡。</li><li><b>認識年輕人</b>：交幾個小 15 歲的朋友，心態不老古板。</li></ul>" 
+            },
+            purpose: { 
+                low: "<b>這叫做「不知道自己是誰」</b><br>以前都說「我是某經理」，現在說不出口，覺得自己沒價值。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>換個自我介紹</b>：說「我叫阿明，喜歡種花」，不提職稱。</li><li><b>花小錢試試看</b>：列出 10 個想做的事，上體驗課。</li></ul>", 
+                mid: "<b>這叫做「想做但沒行動」</b><br>心裡有些想學的東西，但總是用「明天再說」來拖延。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>訂個小目標</b>：例如「年底前要幫孫子拍寫真集」。</li><li><b>舊功夫新用處</b>：拿工作專長來規劃全家旅遊。</li></ul>", 
+                high: "<b>這叫做「圓夢時刻」</b><br>每天都很充實，甚至比上班時還忙，但忙得很開心。<br><br><b>🚀 做得到的行動建議：</b><ul><li><b>幹件大事</b>：寫書、環島、學開飛機。</li><li><b>分享您的功夫</b>：當志工、當顧問。</li></ul>" 
+            }
         };
         let level = score >= 20 ? 'high' : (score >= 11 ? 'mid' : 'low');
         return logic[type][level];
@@ -200,7 +290,6 @@
         currentData = [scores.finance, scores.health, scores.social, scores.purpose];
         const total = currentData.reduce((a,b)=>a+b, 0);
 
-        // 第一階段：送出問卷
         fetch(GOOGLE_SCRIPT_URL, { 
             method: "POST", mode: 'no-cors', 
             body: JSON.stringify({ name, phone, ...scores, total }) 
@@ -214,9 +303,16 @@
         for(let key in questions) {
             let s = scores[key];
             let status = s>=20?"優良":(s>=11?"尚可":"加油");
-            adviceHtml += `<div><b>${questions[key].label}</b>: ${getAdvice(s, key)}</div>`;
+            // Web 版顯示精簡版
+            adviceHtml += `<div><b>${questions[key].label}</b>: ${s} 分 (${status})</div>`;
+            // PDF 表格
             pdfTable += `<tr><td>${questions[key].label}</td><td>${s}</td><td>${status}</td></tr>`;
-            pdfAdvice += `<div style="margin-bottom:20px; font-size:16px;"><b>${questions[key].label} (${status})</b><br><span style="color:#555;">${getAdvice(s, key)}</span></div>`;
+            // PDF 卡片內容
+            pdfAdvice += `
+            <div class="advice-card">
+                <div class="advice-header">${questions[key].label} (評級: ${status})</div>
+                <div class="advice-content">${getAdvice(s, key)}</div>
+            </div>`;
         }
         document.getElementById('webAdviceList').innerHTML = adviceHtml;
         document.getElementById('pdfTableBody').innerHTML = pdfTable;
@@ -278,7 +374,33 @@
 
     function createChart(canvasId, data, isPdf) {
         const ctx = document.getElementById(canvasId).getContext('2d');
-        return new Chart(ctx, { type: 'radar', data: { labels: ['財務', '健康', '社交', '人生'], datasets: [{ data, backgroundColor: 'rgba(0,86,179,0.2)', borderColor: '#0056b3', borderWidth: 2 }] }, options: { animation: isPdf?false:{duration:1000}, scales: { r: { suggestedMin: 0, suggestedMax: 25, ticks: { display: false }, pointLabels: { font: { size: isPdf?18:12 } } } }, plugins: { legend: { display: false } } } });
+        return new Chart(ctx, { 
+            type: 'radar', 
+            data: { 
+                labels: ['💰 財務', '❤️ 健康', '🤝 社交', '🌟 人生'], 
+                datasets: [{ 
+                    data, 
+                    backgroundColor: 'rgba(0, 86, 179, 0.4)', 
+                    borderColor: '#0056b3', 
+                    borderWidth: 2,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#0056b3',
+                    pointRadius: isPdf ? 4 : 3
+                }] 
+            }, 
+            options: { 
+                animation: isPdf?false:{duration:1000}, 
+                scales: { 
+                    r: { 
+                        suggestedMin: 0, 
+                        suggestedMax: 25, 
+                        ticks: { display: false }, 
+                        pointLabels: { font: { size: isPdf?18:12, family: 'Microsoft JhengHei' } } 
+                    } 
+                }, 
+                plugins: { legend: { display: false } } 
+            } 
+        });
     }
 
     function sendEmailReport() {
@@ -287,14 +409,12 @@
         if(!email.includes('@')) { alert("Email 格式有誤"); return; }
         btn.disabled = true; btn.innerText = "...";
         
-        // 第二階段：送出 Email
-        // 【修正點】：這裡加入了 phone 欄位，確保後端能用電話進行歸戶
         fetch(GOOGLE_SCRIPT_URL, { 
             method: "POST", mode: 'no-cors', 
             body: JSON.stringify({ 
                 action: "send_email", 
                 name: document.getElementById('userName').value, 
-                phone: document.getElementById('userPhone').value, // <--- 關鍵！將電話傳給後端
+                phone: document.getElementById('userPhone').value, 
                 email, 
                 age: document.getElementById('userAge').value, 
                 total: currentData.reduce((a,b)=>a+b,0), 
@@ -308,7 +428,6 @@
             const statusDiv = document.getElementById('emailStatus');
             statusDiv.innerText = "✅ 資料已送出！請至您的信箱領取專屬的財務建議"; 
             statusDiv.style.display = "block"; 
-            
             btn.innerText = "已發送";
         })
         .catch(() => { 
